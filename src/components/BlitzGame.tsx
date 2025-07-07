@@ -1,11 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { GameState, Player, Card } from "@/types/game";
 import { deckApi } from "@/services/deckApi";
 import { calculatePlayerScores, createInitialPlayer } from "@/utils/gameUtils";
-import PlayerZone from "./PlayerZone";
+import GameLayout from "./GameLayout";
 import GameControls from "./GameControls";
-import CenterArea from "./CenterArea";
 import { useToast } from "@/hooks/use-toast";
 
 const BlitzGame = () => {
@@ -28,7 +26,6 @@ const BlitzGame = () => {
   const [deckRemaining, setDeckRemaining] = useState(52);
   const [turnPhase, setTurnPhase] = useState<'decision' | 'draw' | 'discard'>('decision');
 
-  // Initialize game
   useEffect(() => {
     initializeGame();
   }, []);
@@ -356,49 +353,58 @@ const BlitzGame = () => {
     }
   };
 
-  const currentPlayer = gameState.players[gameState.currentPlayerIndex];
-  const isCurrentPlayerTurn = gameState.gamePhase === 'playing' || gameState.gamePhase === 'finalRound';
+  const userPlayer = gameState.players.find(p => p.id === 0);
   const topDiscardCard = gameState.discardPile[gameState.discardPile.length - 1] || null;
 
-  return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      {/* Players Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {gameState.players.map((player, index) => (
-          <PlayerZone
-            key={player.id}
-            player={player}
-            isCurrentPlayer={index === gameState.currentPlayerIndex && isCurrentPlayerTurn}
-            onCardSelect={index === gameState.currentPlayerIndex && turnPhase === 'discard' ? setSelectedCardIndex : undefined}
-            selectedCardIndex={index === gameState.currentPlayerIndex ? selectedCardIndex : undefined}
-            showCards={true}
-          />
-        ))}
+  if (gameState.gamePhase === 'setup' || !userPlayer) {
+    return (
+      <div className="max-w-7xl mx-auto text-center">
+        <div className="text-white text-lg">Setting up game...</div>
       </div>
+    );
+  }
 
-      {/* Center Area */}
-      <CenterArea 
-        topDiscardCard={topDiscardCard}
-        deckRemaining={deckRemaining}
-      />
+  if (gameState.gamePhase === 'gameEnd') {
+    return (
+      <div className="max-w-7xl mx-auto">
+        <GameControls
+          gamePhase={gameState.gamePhase}
+          isCurrentPlayerTurn={false}
+          canKnock={false}
+          canDraw={false}
+          canDiscard={false}
+          hasSelectedCard={false}
+          topDiscardCard={topDiscardCard}
+          onKnock={handleKnock}
+          onDrawFromDeck={handleDrawFromDeck}
+          onDrawFromDiscard={handleDrawFromDiscard}
+          onDiscard={handleDiscard}
+          onNewGame={initializeGame}
+          message={gameState.message}
+        />
+      </div>
+    );
+  }
 
-      {/* Game Controls */}
-      <GameControls
-        gamePhase={gameState.gamePhase}
-        isCurrentPlayerTurn={isCurrentPlayerTurn}
-        canKnock={turnPhase === 'decision'}
-        canDraw={turnPhase === 'decision'}
-        canDiscard={turnPhase === 'discard'}
-        hasSelectedCard={selectedCardIndex !== null}
-        topDiscardCard={topDiscardCard}
-        onKnock={handleKnock}
-        onDrawFromDeck={handleDrawFromDeck}
-        onDrawFromDiscard={handleDrawFromDiscard}
-        onDiscard={handleDiscard}
-        onNewGame={initializeGame}
-        message={gameState.message}
-      />
-    </div>
+  return (
+    <GameLayout
+      players={gameState.players}
+      userPlayer={userPlayer}
+      currentPlayerIndex={gameState.currentPlayerIndex}
+      topDiscardCard={topDiscardCard}
+      deckRemaining={deckRemaining}
+      selectedCardIndex={selectedCardIndex}
+      turnPhase={turnPhase}
+      gamePhase={gameState.gamePhase}
+      canKnock={turnPhase === 'decision'}
+      onCardSelect={setSelectedCardIndex}
+      onDrawFromDeck={handleDrawFromDeck}
+      onDrawFromDiscard={handleDrawFromDiscard}
+      onKnock={handleKnock}
+      onDiscard={handleDiscard}
+      hasSelectedCard={selectedCardIndex !== null}
+      message={gameState.message}
+    />
   );
 };
 

@@ -9,6 +9,7 @@ interface PlayerZoneProps {
   onCardSelect?: (cardIndex: number) => void;
   selectedCardIndex?: number;
   showCards?: boolean;
+  isUser?: boolean;
 }
 
 const PlayerZone = ({ 
@@ -16,12 +17,11 @@ const PlayerZone = ({
   isCurrentPlayer, 
   onCardSelect, 
   selectedCardIndex,
-  showCards = true 
+  showCards = true,
+  isUser = false
 }: PlayerZoneProps) => {
-  const getSuitColor = (suit: string) => {
-    if (suit === 'hearts' || suit === 'diamonds') return 'text-red-500';
-    return 'text-slate-700';
-  };
+  // Only show cards for the user player
+  const shouldShowCards = isUser && showCards;
 
   return (
     <Card className={`p-4 transition-all duration-300 ${
@@ -38,7 +38,7 @@ const PlayerZone = ({
             isCurrentPlayer ? 'text-blue-400' : 'text-white'
           }`}>
             {player.name}
-            {isCurrentPlayer && <span className="ml-2 text-sm">(Your Turn)</span>}
+            {isCurrentPlayer && <span className="ml-2 text-sm">(Current Turn)</span>}
           </h3>
           <div className="flex items-center gap-1">
             <Coins className="w-4 h-4 text-yellow-400" />
@@ -46,8 +46,8 @@ const PlayerZone = ({
           </div>
         </div>
 
-        {/* Cards */}
-        {showCards && (
+        {/* Cards - only show for user */}
+        {shouldShowCards ? (
           <div className="flex gap-1 flex-wrap">
             {player.cards.map((card, index) => (
               <div
@@ -64,6 +64,15 @@ const PlayerZone = ({
                   alt={`${card.value} of ${card.suit}`}
                   className="w-12 h-16 rounded shadow-md"
                 />
+              </div>
+            ))}
+          </div>
+        ) : !isUser && (
+          <div className="flex gap-1">
+            {/* Show card backs for other players */}
+            {Array.from({ length: player.cards.length }).map((_, index) => (
+              <div key={index} className="w-12 h-16 bg-slate-700 rounded shadow-md flex items-center justify-center">
+                <div className="text-2xl">🐱</div>
               </div>
             ))}
           </div>
