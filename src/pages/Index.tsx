@@ -7,11 +7,8 @@ const Index = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-8">
           <h1 className="text-5xl font-bold text-white mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-            Blitz Card Game
+            Bill's Blitz
           </h1>
-          <p className="text-slate-300 text-lg max-w-2xl mx-auto">
-            Strategic card game - Get the highest score in a single suit up to 31, but beware of knocking too early!
-          </p>
         </div>
         <BlitzGame />
       </div>
