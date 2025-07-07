@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { GameState, Player, Card } from "@/types/game";
 import { deckApi } from "@/services/deckApi";
 import { calculatePlayerScores, createInitialPlayer, hasBlitz } from "@/utils/gameUtils";
+import { makeAIDecision } from "@/utils/aiPlayer";
 import GameLayout from "./GameLayout";
 import GameControls from "./GameControls";
 import { useToast } from "@/hooks/use-toast";
@@ -29,6 +30,185 @@ const BlitzGame = () => {
   useEffect(() => {
     initializeGame();
   }, []);
+
+  // Handle AI turns
+  useEffect(() => {
+    if (gameState.gamePhase === 'playing' || gameState.gamePhase === 'finalRound') {
+      const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+      const isUserTurn = gameState.currentPlayerIndex === 0;
+      
+      if (!isUserTurn && !currentPlayer?.isEliminated && turnPhase === 'decision') {
+        // Add delay for AI turn to make it feel more natural
+        const aiTurnDelay = setTimeout(() => {
+          executeAITurn();
+        }, 1500);
+        
+        return () => clearTimeout(aiTurnDelay);
+      }
+    }
+  }, [gameState.currentPlayerIndex, turnPhase, gameState.gamePhase]);
+
+  const executeAITurn = async () => {
+    const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+    const topDiscardCard = gameState.discardPile[gameState.discardPile.length - 1] || null;
+    const otherPlayersCount = gameState.players.filter(p => !p.isEliminated).length - 1;
+    
+    console.log(`AI Player ${currentPlayer.name} is thinking...`);
+    
+    const decision = makeAIDecision(currentPlayer, topDiscardCard, otherPlayersCount, gameState.hasKnocked);
+    
+    if (decision.action === 'knock') {
+      console.log(`${currentPlayer.name} decided to knock!`);
+      handleAIKnock();
+    } else {
+      console.log(`${currentPlayer.name} decided to draw from ${decision.drawFrom}`);
+      if (decision.drawFrom === 'deck') {
+        await handleAIDrawFromDeck(decision.discardIndex!);
+      } else {
+        await handleAIDrawFromDiscard(decision.discardIndex!);
+      }
+    }
+  };
+
+  const handleAIKnock = () => {
+    const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+    console.log(`${currentPlayer.name} knocked!`);
+    
+    setGameState(prev => ({
+      ...prev,
+      hasKnocked: true,
+      knocker: prev.currentPlayerIndex,
+      gamePhase: 'finalRound',
+      message: `${currentPlayer.name} knocked! Final round begins.`
+    }));
+    
+    // Move to next player for final round
+    moveToNextPlayer();
+    setTurnPhase('decision');
+  };
+
+  const handleAIDrawFromDeck = async (discardIndex: number) => {
+    if (!gameState.deckId) return;
+    
+    try {
+      const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+      console.log(`${currentPlayer.name} drawing from deck...`);
+      
+      const drawResponse = await deckApi.drawCards(gameState.deckId, 1);
+      
+      const updatedPlayer = calculatePlayerScores({
+        ...currentPlayer,
+        cards: [...currentPlayer.cards, drawResponse.cards[0]]
+      });
+
+      // Check for BLITZ (31) immediately after drawing
+      if (checkForBlitz(updatedPlayer)) {
+        return;
+      }
+
+      // AI immediately discards
+      const cardToDiscard = updatedPlayer.cards[discardIndex];
+      const remainingCards = updatedPlayer.cards.filter((_, index) => index !== discardIndex);
+      
+      const finalPlayer = calculatePlayerScores({
+        ...updatedPlayer,
+        cards: remainingCards
+      });
+
+      setGameState(prev => ({
+        ...prev,
+        players: prev.players.map((player, index) => 
+          index === prev.currentPlayerIndex ? finalPlayer : player
+        ),
+        discardPile: [...prev.discardPile, cardToDiscard],
+        message: `${finalPlayer.name} drew from deck and discarded.`
+      }));
+      
+      setDeckRemaining(drawResponse.remaining);
+      
+      // Check if final round is complete
+      if (gameState.gamePhase === 'finalRound') {
+        const newFinalRoundPlayers = new Set(gameState.finalRoundPlayers);
+        newFinalRoundPlayers.add(gameState.currentPlayerIndex);
+        
+        if (newFinalRoundPlayers.size === 3) {
+          console.log("Final round complete, calculating scores...");
+          calculateRoundResults();
+          return;
+        } else {
+          setGameState(prev => ({
+            ...prev,
+            finalRoundPlayers: newFinalRoundPlayers
+          }));
+        }
+      }
+      
+      // Move to next player
+      moveToNextPlayer();
+      setTurnPhase('decision');
+      
+    } catch (error) {
+      console.error("Error with AI draw from deck:", error);
+    }
+  };
+
+  const handleAIDrawFromDiscard = async (discardIndex: number) => {
+    if (gameState.discardPile.length === 0) return;
+    
+    const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+    console.log(`${currentPlayer.name} drawing from discard...`);
+    
+    const cardToTake = gameState.discardPile[gameState.discardPile.length - 1];
+    
+    const updatedPlayer = calculatePlayerScores({
+      ...currentPlayer,
+      cards: [...currentPlayer.cards, cardToTake]
+    });
+
+    // Check for BLITZ (31) immediately after drawing
+    if (checkForBlitz(updatedPlayer)) {
+      return;
+    }
+
+    // AI immediately discards
+    const cardToDiscard = updatedPlayer.cards[discardIndex];
+    const remainingCards = updatedPlayer.cards.filter((_, index) => index !== discardIndex);
+    
+    const finalPlayer = calculatePlayerScores({
+      ...updatedPlayer,
+      cards: remainingCards
+    });
+
+    setGameState(prev => ({
+      ...prev,
+      players: prev.players.map((player, index) => 
+        index === prev.currentPlayerIndex ? finalPlayer : player
+      ),
+      discardPile: [...prev.discardPile.slice(0, -1), cardToDiscard],
+      message: `${finalPlayer.name} drew from discard and discarded.`
+    }));
+    
+    // Check if final round is complete
+    if (gameState.gamePhase === 'finalRound') {
+      const newFinalRoundPlayers = new Set(gameState.finalRoundPlayers);
+      newFinalRoundPlayers.add(gameState.currentPlayerIndex);
+      
+      if (newFinalRoundPlayers.size === 3) {
+        console.log("Final round complete, calculating scores...");
+        calculateRoundResults();
+        return;
+      } else {
+        setGameState(prev => ({
+          ...prev,
+          finalRoundPlayers: newFinalRoundPlayers
+        }));
+      }
+    }
+    
+    // Move to next player
+    moveToNextPlayer();
+    setTurnPhase('decision');
+  };
 
   const initializeGame = async () => {
     try {
