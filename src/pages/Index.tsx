@@ -10,7 +10,7 @@ const Index = () => {
             Blitz Card Game
           </h1>
           <p className="text-slate-300 text-lg max-w-2xl mx-auto">
-            Strategic card game - Get the highest score in a single suit, but beware of knocking too early!
+            Strategic card game - Get the highest score in a single suit up to 31, but beware of knocking too early!
           </p>
         </div>
         <BlitzGame />

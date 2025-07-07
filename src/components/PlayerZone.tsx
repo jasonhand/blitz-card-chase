@@ -78,32 +78,37 @@ const PlayerZone = ({
           </div>
         )}
 
-        {/* Scores */}
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          {Object.entries(player.scores).map(([suit, score]) => (
-            <div
-              key={suit}
-              className={`flex justify-between items-center p-1 rounded ${
-                suit === player.bestSuit 
-                  ? 'bg-green-600/20 text-green-400 font-bold' 
-                  : 'bg-slate-700/50 text-slate-300'
-              }`}
-            >
-              <span className="capitalize">{suit}:</span>
-              <span>{score}</span>
+        {/* Only show scores for user player */}
+        {isUser && (
+          <>
+            {/* Scores */}
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              {Object.entries(player.scores).map(([suit, score]) => (
+                <div
+                  key={suit}
+                  className={`flex justify-between items-center p-1 rounded ${
+                    suit === player.bestSuit 
+                      ? 'bg-green-600/20 text-green-400 font-bold' 
+                      : 'bg-slate-700/50 text-slate-300'
+                  }`}
+                >
+                  <span className="capitalize">{suit}:</span>
+                  <span>{score}</span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        {/* Best Score */}
-        <div className="text-center">
-          <div className="text-lg font-bold text-green-400">
-            Best: {player.bestScore}
-          </div>
-          <div className="text-xs text-slate-400 capitalize">
-            in {player.bestSuit}
-          </div>
-        </div>
+            {/* Best Score */}
+            <div className="text-center">
+              <div className="text-lg font-bold text-green-400">
+                Best: {player.bestScore}
+              </div>
+              <div className="text-xs text-slate-400 capitalize">
+                in {player.bestSuit}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </Card>
   );

@@ -45,3 +45,8 @@ export const createInitialPlayer = (id: number, name: string): Player => ({
   bestScore: 0,
   bestSuit: 'hearts'
 });
+
+// Check if a player has hit 31 (BLITZ)
+export const hasBlitz = (player: Player): boolean => {
+  return player.bestScore === 31;
+};

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { GameState, Player, Card } from "@/types/game";
 import { deckApi } from "@/services/deckApi";
-import { calculatePlayerScores, createInitialPlayer } from "@/utils/gameUtils";
+import { calculatePlayerScores, createInitialPlayer, hasBlitz } from "@/utils/gameUtils";
 import GameLayout from "./GameLayout";
 import GameControls from "./GameControls";
 import { useToast } from "@/hooks/use-toast";
@@ -101,6 +101,49 @@ const BlitzGame = () => {
     }
   };
 
+  const checkForBlitz = (player: Player) => {
+    if (hasBlitz(player)) {
+      console.log(`${player.name} got BLITZ (31)!`);
+      
+      // All other players lose 1 coin
+      const updatedPlayers = gameState.players.map(p => 
+        p.id === player.id ? p : { ...p, coins: Math.max(0, p.coins - 1) }
+      );
+      
+      // Check for eliminations
+      const finalPlayers = updatedPlayers.map(p => ({
+        ...p,
+        isEliminated: p.coins === 0
+      }));
+      
+      const remainingPlayers = finalPlayers.filter(p => !p.isEliminated);
+      
+      if (remainingPlayers.length === 1) {
+        // Game over
+        setGameState(prev => ({
+          ...prev,
+          players: finalPlayers,
+          gamePhase: 'gameEnd',
+          winner: remainingPlayers[0],
+          message: `${player.name} got BLITZ! ${remainingPlayers[0].name} wins the game!`
+        }));
+      } else {
+        // Continue with new round
+        toast({
+          title: "BLITZ!",
+          description: `${player.name} hit 31! All other players lose 1 coin.`
+        });
+        
+        setTimeout(() => {
+          startNewRound(finalPlayers);
+        }, 2000);
+      }
+      
+      return true;
+    }
+    return false;
+  };
+
   const handleKnock = () => {
     console.log(`Player ${gameState.currentPlayerIndex} knocked!`);
     
@@ -129,6 +172,11 @@ const BlitzGame = () => {
         ...currentPlayer,
         cards: [...currentPlayer.cards, drawResponse.cards[0]]
       });
+
+      // Check for BLITZ (31) immediately after drawing
+      if (checkForBlitz(updatedPlayer)) {
+        return; // Game state already updated by checkForBlitz
+      }
 
       setGameState(prev => ({
         ...prev,
@@ -162,6 +210,11 @@ const BlitzGame = () => {
       ...currentPlayer,
       cards: [...currentPlayer.cards, cardToTake]
     });
+
+    // Check for BLITZ (31) immediately after drawing
+    if (checkForBlitz(updatedPlayer)) {
+      return; // Game state already updated by checkForBlitz
+    }
 
     setGameState(prev => ({
       ...prev,
