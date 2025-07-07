@@ -79,7 +79,7 @@ const BlitzGame = () => {
       hasKnocked: true,
       knocker: prev.currentPlayerIndex,
       gamePhase: 'finalRound',
-      message: `${currentPlayer.name} knocked! Final round begins.`
+      message: `${currentPlayer.name} knocked! Each player gets one final turn.`
     }));
     
     // Move to next player for final round
@@ -131,7 +131,12 @@ const BlitzGame = () => {
         const newFinalRoundPlayers = new Set(gameState.finalRoundPlayers);
         newFinalRoundPlayers.add(gameState.currentPlayerIndex);
         
-        if (newFinalRoundPlayers.size === 3) {
+        // Count non-knocker players who have played
+        const nonKnockerPlayersCount = gameState.players.filter((_, index) => 
+          !gameState.players[index].isEliminated && index !== gameState.knocker
+        ).length;
+        
+        if (newFinalRoundPlayers.size >= nonKnockerPlayersCount) {
           console.log("Final round complete, calculating scores...");
           calculateRoundResults();
           return;
@@ -193,7 +198,12 @@ const BlitzGame = () => {
       const newFinalRoundPlayers = new Set(gameState.finalRoundPlayers);
       newFinalRoundPlayers.add(gameState.currentPlayerIndex);
       
-      if (newFinalRoundPlayers.size === 3) {
+      // Count non-knocker players who have played
+      const nonKnockerPlayersCount = gameState.players.filter((_, index) => 
+        !gameState.players[index].isEliminated && index !== gameState.knocker
+      ).length;
+      
+      if (newFinalRoundPlayers.size >= nonKnockerPlayersCount) {
         console.log("Final round complete, calculating scores...");
         calculateRoundResults();
         return;
@@ -332,7 +342,7 @@ const BlitzGame = () => {
       hasKnocked: true,
       knocker: prev.currentPlayerIndex,
       gamePhase: 'finalRound',
-      message: `${prev.players[prev.currentPlayerIndex].name} knocked! Final round begins.`
+      message: `${prev.players[prev.currentPlayerIndex].name} knocked! Each player gets one final turn.`
     }));
     
     // Move to next player for final round
@@ -436,7 +446,12 @@ const BlitzGame = () => {
       const newFinalRoundPlayers = new Set(gameState.finalRoundPlayers);
       newFinalRoundPlayers.add(gameState.currentPlayerIndex);
       
-      if (newFinalRoundPlayers.size === 3) { // All players except knocker have played
+      // Count non-knocker players who have played
+      const nonKnockerPlayersCount = gameState.players.filter((_, index) => 
+        !gameState.players[index].isEliminated && index !== gameState.knocker
+      ).length;
+      
+      if (newFinalRoundPlayers.size >= nonKnockerPlayersCount) {
         console.log("Final round complete, calculating scores...");
         calculateRoundResults();
         return;
@@ -473,9 +488,15 @@ const BlitzGame = () => {
     }
     
     const nextPlayer = gameState.players[nextIndex];
-    const phaseMessage = gameState.gamePhase === 'finalRound' ? 
-      `${nextPlayer.name}'s final turn` : 
-      `${nextPlayer.name}'s turn - Knock or Continue?`;
+    let phaseMessage = "";
+    
+    if (gameState.gamePhase === 'finalRound') {
+      phaseMessage = `${nextPlayer.name}'s final turn`;
+    } else {
+      phaseMessage = nextIndex === 0 ? 
+        `Your turn - Knock or Continue?` : 
+        `${nextPlayer.name}'s turn`;
+    }
     
     setGameState(prev => ({
       ...prev,
