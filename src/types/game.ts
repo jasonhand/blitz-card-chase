@@ -36,6 +36,7 @@ export interface GameState {
   hasKnocked: boolean;
   knocker: number | null;
   finalRoundPlayers: Set<number>;
+  finalRoundTurnsRemaining: number;
   roundNumber: number;
   winner: Player | null;
   message: string;

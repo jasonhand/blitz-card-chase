@@ -61,11 +61,8 @@ export const makeAIDecision = (
   const knockThreshold = Math.floor(20 + (riskTolerance * 8)); // 20-27 range
   const conservativeThreshold = Math.floor(15 + (aggressiveness * 10)); // 15-25 range
   
-  // If in final round (someone knocked), be more aggressive
+  // If in final round (someone knocked), NO MORE KNOCKING ALLOWED
   if (hasKnocked) {
-    if (currentScore >= 18) {
-      return { action: 'knock' };
-    }
     // In final round, more likely to take risks
     if (topDiscardCard) {
       const discardValue = calculateDiscardValue(player, topDiscardCard);

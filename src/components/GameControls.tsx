@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Shuffle, Hand } from "lucide-react";
+import { Card as CardType } from "@/types/game";
 
 interface GameControlsProps {
   gamePhase: string;
@@ -10,7 +11,7 @@ interface GameControlsProps {
   canDraw: boolean;
   canDiscard: boolean;
   hasSelectedCard: boolean;
-  topDiscardCard: any;
+  topDiscardCard: CardType | null;
   onKnock: () => void;
   onDrawFromDeck: () => void;
   onDrawFromDiscard: () => void;
