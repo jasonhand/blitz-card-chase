@@ -1,4 +1,3 @@
-
 import { Card as CardType } from "@/types/game";
 
 interface UserHandProps {
@@ -6,14 +5,19 @@ interface UserHandProps {
   onCardSelect: (cardIndex: number) => void;
   selectedCardIndex: number | null;
   canSelectCards: boolean;
+  cardSize?: 'large' | 'normal';
+  onDiscardCard?: (cardIndex: number) => void;
 }
 
 const UserHand = ({
   cards,
   onCardSelect,
   selectedCardIndex,
-  canSelectCards
+  canSelectCards,
+  cardSize = 'normal',
+  onDiscardCard,
 }: UserHandProps) => {
+  const cardClass = cardSize === 'large' ? 'w-40 h-56' : 'w-20 h-28';
   return (
     <div className="flex gap-3 justify-center items-center">
       {cards.map((card, index) => (
@@ -28,12 +32,12 @@ const UserHand = ({
                 ? 'hover:transform hover:-translate-y-2 hover:shadow-lg' 
                 : ''
           }`}
-          onClick={() => canSelectCards && onCardSelect(index)}
+          onClick={() => canSelectCards && (onDiscardCard ? onDiscardCard(index) : onCardSelect(index))}
         >
           <img
             src={card.image}
             alt={`${card.value} of ${card.suit}`}
-            className="w-20 h-28 rounded-lg shadow-md"
+            className={`${cardClass} rounded-lg shadow-md`}
           />
         </div>
       ))}

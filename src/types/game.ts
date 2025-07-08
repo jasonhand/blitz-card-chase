@@ -1,4 +1,3 @@
-
 export interface Card {
   code: string;
   image: string;
@@ -22,6 +21,12 @@ export interface Player {
   bestSuit: string;
 }
 
+export interface DiscardLogEntry {
+  playerName: string;
+  card: Card;
+  turn: number;
+}
+
 export interface GameState {
   players: Player[];
   currentPlayerIndex: number;
@@ -34,6 +39,7 @@ export interface GameState {
   roundNumber: number;
   winner: Player | null;
   message: string;
+  discardLog: DiscardLogEntry[];
 }
 
 export interface DeckResponse {

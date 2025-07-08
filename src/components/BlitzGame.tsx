@@ -20,7 +20,8 @@ const BlitzGame = () => {
     finalRoundPlayers: new Set(),
     roundNumber: 1,
     winner: null,
-    message: "Starting new game..."
+    message: "Starting new game...",
+    discardLog: [],
   });
 
   const [selectedCardIndex, setSelectedCardIndex] = useState<number | null>(null);
@@ -73,18 +74,22 @@ const BlitzGame = () => {
   const handleAIKnock = () => {
     const currentPlayer = gameState.players[gameState.currentPlayerIndex];
     console.log(`${currentPlayer.name} knocked!`);
-    
+    toast({
+      title: "Knock!",
+      description: `${currentPlayer.name} has knocked. Everyone else gets one more draw to improve their hand.`
+    });
     setGameState(prev => ({
       ...prev,
       hasKnocked: true,
       knocker: prev.currentPlayerIndex,
       gamePhase: 'finalRound',
+      finalRoundPlayers: new Set(),
       message: `${currentPlayer.name} knocked! Each player gets one final turn.`
     }));
-    
-    // Move to next player for final round
-    moveToNextPlayer();
-    setTurnPhase('decision');
+    setTimeout(() => {
+      moveToNextPlayer();
+      setTurnPhase('decision');
+    }, 0);
   };
 
   const handleAIDrawFromDeck = async (discardIndex: number) => {
@@ -121,6 +126,10 @@ const BlitzGame = () => {
           index === prev.currentPlayerIndex ? finalPlayer : player
         ),
         discardPile: [...prev.discardPile, cardToDiscard],
+        discardLog: [
+          { playerName: currentPlayer.name, card: cardToDiscard, turn: prev.roundNumber },
+          ...prev.discardLog
+        ],
         message: `${finalPlayer.name} drew from deck and discarded.`
       }));
       
@@ -190,6 +199,10 @@ const BlitzGame = () => {
         index === prev.currentPlayerIndex ? finalPlayer : player
       ),
       discardPile: [...prev.discardPile.slice(0, -1), cardToDiscard],
+      discardLog: [
+        { playerName: currentPlayer.name, card: cardToDiscard, turn: prev.roundNumber },
+        ...prev.discardLog
+      ],
       message: `${finalPlayer.name} drew from discard and discarded.`
     }));
     
@@ -197,21 +210,39 @@ const BlitzGame = () => {
     if (gameState.gamePhase === 'finalRound') {
       const newFinalRoundPlayers = new Set(gameState.finalRoundPlayers);
       newFinalRoundPlayers.add(gameState.currentPlayerIndex);
-      
-      // Count non-knocker players who have played
-      const nonKnockerPlayersCount = gameState.players.filter((_, index) => 
-        !gameState.players[index].isEliminated && index !== gameState.knocker
-      ).length;
-      
+      // Count non-knocker, non-eliminated players
+      const nonKnockerPlayers = gameState.players
+        .map((p, idx) => ({ ...p, idx }))
+        .filter(p => !p.isEliminated && p.idx !== gameState.knocker);
+      const nonKnockerPlayersCount = nonKnockerPlayers.length;
       if (newFinalRoundPlayers.size >= nonKnockerPlayersCount) {
+        setGameState(prev => ({ ...prev, finalRoundPlayers: newFinalRoundPlayers }));
+        toast({
+          title: "Showdown!",
+          description: "Let's see your hand."
+        });
         console.log("Final round complete, calculating scores...");
         calculateRoundResults();
         return;
       } else {
-        setGameState(prev => ({
-          ...prev,
-          finalRoundPlayers: newFinalRoundPlayers
-        }));
+        setGameState(prev => ({ ...prev, finalRoundPlayers: newFinalRoundPlayers }));
+        // Find the next non-knocker, non-eliminated player who hasn't played
+        let nextIndex = gameState.currentPlayerIndex;
+        do {
+          nextIndex = (nextIndex + 1) % gameState.players.length;
+        } while (
+          gameState.players[nextIndex].isEliminated ||
+          nextIndex === gameState.knocker ||
+          newFinalRoundPlayers.has(nextIndex)
+        );
+        // Only move to next player if there is one left who hasn't played
+        if (!newFinalRoundPlayers.has(nextIndex)) {
+          setTimeout(() => {
+            setGameState(prev => ({ ...prev, currentPlayerIndex: nextIndex }));
+            setTurnPhase('decision');
+          }, 0);
+        }
+        return;
       }
     }
     
@@ -273,7 +304,7 @@ const BlitzGame = () => {
         ...prev,
         players: updatedPlayers,
         gamePhase: 'playing',
-        message: `${updatedPlayers[0].name}'s turn - Knock or Continue?`
+        message: `${updatedPlayers[0].name === 'You' ? "You're up bud! Draw - or Knock!" : updatedPlayers[0].name + "'s turn"}`
       }));
       
       setDeckRemaining(drawResponse.remaining);
@@ -294,20 +325,20 @@ const BlitzGame = () => {
   const checkForBlitz = (player: Player) => {
     if (hasBlitz(player)) {
       console.log(`${player.name} got BLITZ (31)!`);
-      
-      // All other players lose 1 coin
-      const updatedPlayers = gameState.players.map(p => 
+      // All other players lose 1 coin, winner (player) gains 1 coin per loser
+      let updatedPlayers = gameState.players.map(p =>
         p.id === player.id ? p : { ...p, coins: Math.max(0, p.coins - 1) }
       );
-      
+      const coinsWon = gameState.players.length - 1;
+      updatedPlayers = updatedPlayers.map(p =>
+        p.id === player.id ? { ...p, coins: p.coins + coinsWon } : p
+      );
       // Check for eliminations
       const finalPlayers = updatedPlayers.map(p => ({
         ...p,
         isEliminated: p.coins === 0
       }));
-      
       const remainingPlayers = finalPlayers.filter(p => !p.isEliminated);
-      
       if (remainingPlayers.length === 1) {
         // Game over
         setGameState(prev => ({
@@ -323,12 +354,10 @@ const BlitzGame = () => {
           title: "BLITZ!",
           description: `${player.name} hit 31! All other players lose 1 coin.`
         });
-        
         setTimeout(() => {
           startNewRound(finalPlayers);
         }, 2000);
       }
-      
       return true;
     }
     return false;
@@ -336,18 +365,22 @@ const BlitzGame = () => {
 
   const handleKnock = () => {
     console.log(`Player ${gameState.currentPlayerIndex} knocked!`);
-    
+    toast({
+      title: "Knock!",
+      description: `${gameState.players[gameState.currentPlayerIndex].name} has knocked. Everyone else gets one more draw to improve their hand.`
+    });
     setGameState(prev => ({
       ...prev,
       hasKnocked: true,
       knocker: prev.currentPlayerIndex,
       gamePhase: 'finalRound',
+      finalRoundPlayers: new Set(),
       message: `${prev.players[prev.currentPlayerIndex].name} knocked! Each player gets one final turn.`
     }));
-    
-    // Move to next player for final round
-    moveToNextPlayer();
-    setTurnPhase('decision');
+    setTimeout(() => {
+      moveToNextPlayer();
+      setTurnPhase('decision');
+    }, 0);
   };
 
   const handleDrawFromDeck = async () => {
@@ -436,7 +469,11 @@ const BlitzGame = () => {
       players: prev.players.map((player, index) => 
         index === prev.currentPlayerIndex ? updatedPlayer : player
       ),
-      discardPile: [...prev.discardPile, cardToDiscard]
+      discardPile: [...prev.discardPile, cardToDiscard],
+      discardLog: [
+        { playerName: currentPlayer.name, card: cardToDiscard, turn: prev.roundNumber },
+        ...prev.discardLog
+      ]
     }));
     
     setSelectedCardIndex(null);
@@ -445,21 +482,39 @@ const BlitzGame = () => {
     if (gameState.gamePhase === 'finalRound') {
       const newFinalRoundPlayers = new Set(gameState.finalRoundPlayers);
       newFinalRoundPlayers.add(gameState.currentPlayerIndex);
-      
-      // Count non-knocker players who have played
-      const nonKnockerPlayersCount = gameState.players.filter((_, index) => 
-        !gameState.players[index].isEliminated && index !== gameState.knocker
-      ).length;
-      
+      // Count non-knocker, non-eliminated players
+      const nonKnockerPlayers = gameState.players
+        .map((p, idx) => ({ ...p, idx }))
+        .filter(p => !p.isEliminated && p.idx !== gameState.knocker);
+      const nonKnockerPlayersCount = nonKnockerPlayers.length;
       if (newFinalRoundPlayers.size >= nonKnockerPlayersCount) {
+        setGameState(prev => ({ ...prev, finalRoundPlayers: newFinalRoundPlayers }));
+        toast({
+          title: "Showdown!",
+          description: "Let's see your hand."
+        });
         console.log("Final round complete, calculating scores...");
         calculateRoundResults();
         return;
       } else {
-        setGameState(prev => ({
-          ...prev,
-          finalRoundPlayers: newFinalRoundPlayers
-        }));
+        setGameState(prev => ({ ...prev, finalRoundPlayers: newFinalRoundPlayers }));
+        // Find the next non-knocker, non-eliminated player who hasn't played
+        let nextIndex = gameState.currentPlayerIndex;
+        do {
+          nextIndex = (nextIndex + 1) % gameState.players.length;
+        } while (
+          gameState.players[nextIndex].isEliminated ||
+          nextIndex === gameState.knocker ||
+          newFinalRoundPlayers.has(nextIndex)
+        );
+        // Only move to next player if there is one left who hasn't played
+        if (!newFinalRoundPlayers.has(nextIndex)) {
+          setTimeout(() => {
+            setGameState(prev => ({ ...prev, currentPlayerIndex: nextIndex }));
+            setTurnPhase('decision');
+          }, 0);
+        }
+        return;
       }
     }
     
@@ -471,33 +526,26 @@ const BlitzGame = () => {
   const moveToNextPlayer = () => {
     const activePlayers = gameState.players.filter(p => !p.isEliminated);
     if (activePlayers.length <= 1) return;
-    
     let nextIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
-    
-    // Skip eliminated players
+    // Always skip eliminated players
     while (gameState.players[nextIndex].isEliminated) {
       nextIndex = (nextIndex + 1) % gameState.players.length;
     }
-    
-    // Skip the knocker in final round
-    if (gameState.gamePhase === 'finalRound' && nextIndex === gameState.knocker) {
-      nextIndex = (nextIndex + 1) % gameState.players.length;
-      while (gameState.players[nextIndex].isEliminated) {
+    // Always skip the knocker in final round
+    if (gameState.gamePhase === 'finalRound') {
+      while (nextIndex === gameState.knocker || gameState.players[nextIndex].isEliminated) {
         nextIndex = (nextIndex + 1) % gameState.players.length;
       }
     }
-    
     const nextPlayer = gameState.players[nextIndex];
     let phaseMessage = "";
-    
     if (gameState.gamePhase === 'finalRound') {
       phaseMessage = `${nextPlayer.name}'s final turn`;
     } else {
       phaseMessage = nextIndex === 0 ? 
-        `Your turn - Knock or Continue?` : 
+        `You're up bud! Draw - or Knock!` : 
         `${nextPlayer.name}'s turn`;
     }
-    
     setGameState(prev => ({
       ...prev,
       currentPlayerIndex: nextIndex,
@@ -507,43 +555,45 @@ const BlitzGame = () => {
 
   const calculateRoundResults = () => {
     console.log("Calculating round results...");
-    
     const knocker = gameState.players[gameState.knocker!];
     const otherPlayers = gameState.players.filter((_, index) => index !== gameState.knocker);
-    
     const knockerScore = knocker.bestScore;
     const otherScores = otherPlayers.map(p => p.bestScore);
     const lowestOtherScore = Math.min(...otherScores);
-    
     let updatedPlayers = [...gameState.players];
     let resultMessage = "";
-    
-    // Check if knocker beats at least one other player
     if (knockerScore > lowestOtherScore) {
-      // Knocker wins, lowest scorer loses 1 coin
+      // Knocker wins, lowest scorer loses 1 coin, knocker gains 1 coin
       const lowestScorer = otherPlayers.find(p => p.bestScore === lowestOtherScore)!;
       updatedPlayers[lowestScorer.id] = {
         ...lowestScorer,
         coins: Math.max(0, lowestScorer.coins - 1)
       };
-      resultMessage = `${knocker.name} won! ${lowestScorer.name} loses 1 coin.`;
+      updatedPlayers[knocker.id] = {
+        ...knocker,
+        coins: knocker.coins + 1
+      };
+      resultMessage = `${knocker.name} won! ${lowestScorer.name} loses 1 coin (transferred to ${knocker.name}).`;
     } else {
-      // Knocker loses 2 coins for unsuccessful knock
+      // Knocker loses 2 coins for unsuccessful knock, lowest scorer gains 2 coins
       updatedPlayers[knocker.id] = {
         ...knocker,
         coins: Math.max(0, knocker.coins - 2)
       };
-      resultMessage = `${knocker.name}'s knock failed! Loses 2 coins.`;
+      // Optionally, give 2 coins to the player with the highest score (excluding knocker)
+      const highestScorer = otherPlayers.reduce((prev, curr) => (curr.bestScore > prev.bestScore ? curr : prev), otherPlayers[0]);
+      updatedPlayers[highestScorer.id] = {
+        ...highestScorer,
+        coins: highestScorer.coins + 2
+      };
+      resultMessage = `${knocker.name}'s knock failed! Loses 2 coins (transferred to ${highestScorer.name}).`;
     }
-    
     // Check for eliminations
     updatedPlayers = updatedPlayers.map(player => ({
       ...player,
       isEliminated: player.coins === 0
     }));
-    
     const remainingPlayers = updatedPlayers.filter(p => !p.isEliminated);
-    
     if (remainingPlayers.length === 1) {
       // Game over
       setGameState(prev => ({
@@ -559,7 +609,6 @@ const BlitzGame = () => {
         title: "Round Complete",
         description: resultMessage
       });
-      
       setTimeout(() => {
         startNewRound(updatedPlayers);
       }, 2000);
@@ -658,6 +707,8 @@ const BlitzGame = () => {
       onDiscard={handleDiscard}
       hasSelectedCard={selectedCardIndex !== null}
       message={gameState.message}
+      knocker={gameState.knocker}
+      discardLog={gameState.discardLog}
     />
   );
 };
