@@ -81,8 +81,8 @@ const GameLayout = ({
 
   return (
     <div className="h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden game-container no-select relative">
-      {/* Responsive Grid Layout with bottom padding */}
-      <div className="h-full grid grid-rows-[auto_1fr_auto] grid-cols-[auto_1fr_auto] gap-2 p-4 pb-8">
+      {/* iPad-optimized Grid Layout with proper spacing */}
+      <div className="h-screen grid grid-rows-[auto_1fr_auto] grid-cols-[auto_1fr_auto] gap-4 p-2 md:p-4 max-h-screen overflow-hidden">
         
         {/* Top Row */}
         {/* Top Left - Message and Knock Button */}
@@ -108,10 +108,15 @@ const GameLayout = ({
           )}
         </div>
         
-        {/* Top Center - Bot 1 - Much closer to table */}
+        {/* Top Center - Peggy positioned at top */}
         <div className="flex items-center justify-center">
           <div className="flex flex-col items-center">
-            <Card className={`p-1 md:p-2 transition-all duration-300 ${
+            <img
+              src="/Bill_images/Peggy.png"
+              alt="Peggy"
+              className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 mb-2 rounded-full object-cover border-2 border-yellow-400"
+            />
+            <Card className={`p-2 md:p-3 transition-all duration-300 ${
               otherPlayers[1]?.id === currentPlayerIndex 
                 ? 'ring-2 ring-blue-400 bg-blue-50/10 shadow-lg' 
                 : otherPlayers[1]?.isEliminated 
@@ -119,15 +124,15 @@ const GameLayout = ({
                   : 'bg-slate-800 hover:bg-slate-700'
             }`}>
               <div className="flex flex-col items-center">
-                <h3 className={`font-bold text-xs ${
+                <h3 className={`font-bold text-sm ${
                   otherPlayers[1]?.id === currentPlayerIndex ? 'text-blue-400' : 'text-white'
                 }`}>
-                  Bot 1
+                  Peggy
                   {otherPlayers[1]?.id === currentPlayerIndex && <span className="ml-1 text-xs">(Playing)</span>}
                 </h3>
                 <div className="flex items-center gap-1 mt-1">
-                  <Coins className="w-3 h-3 text-yellow-400" />
-                  <span className="text-yellow-400 font-bold text-sm">{otherPlayers[1]?.coins}</span>
+                  <Coins className="w-4 h-4 text-yellow-400" />
+                  <span className="text-yellow-400 font-bold text-base">{otherPlayers[1]?.coins}</span>
                 </div>
               </div>
             </Card>
@@ -138,16 +143,16 @@ const GameLayout = ({
         <div></div>
 
         {/* Middle Row */}
-        {/* Middle Left - Bill - Much closer to table */}
+        {/* Middle Left - Bill positioned on left side of table */}
         <div className="flex items-center justify-center">
           <div className="flex flex-col items-center">
             <img
               src="/Bill_images/Bill_pixel.png"
               alt="Bill"
-              className="w-12 h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 mb-1 touch-image"
-              style={{ imageRendering: 'pixelated', objectFit: 'contain' }}
+              className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 mb-2 rounded-full object-cover border-2 border-blue-400"
+              style={{ imageRendering: 'pixelated' }}
             />
-            <Card className={`p-1 md:p-2 transition-all duration-300 ${
+            <Card className={`p-2 md:p-3 transition-all duration-300 ${
               otherPlayers[0]?.id === currentPlayerIndex 
                 ? 'ring-2 ring-blue-400 bg-blue-50/10 shadow-lg' 
                 : otherPlayers[0]?.isEliminated 
@@ -155,15 +160,15 @@ const GameLayout = ({
                   : 'bg-slate-800 hover:bg-slate-700'
             }`}>
               <div className="flex flex-col items-center">
-                <h3 className={`font-bold text-xs ${
+                <h3 className={`font-bold text-sm ${
                   otherPlayers[0]?.id === currentPlayerIndex ? 'text-blue-400' : 'text-white'
                 }`}>
                   Bill
                   {otherPlayers[0]?.id === currentPlayerIndex && <span className="ml-1 text-xs">(Playing)</span>}
                 </h3>
                 <div className="flex items-center gap-1 mt-1">
-                  <Coins className="w-3 h-3 text-yellow-400" />
-                  <span className="text-yellow-400 font-bold text-sm">{otherPlayers[0]?.coins}</span>
+                  <Coins className="w-4 h-4 text-yellow-400" />
+                  <span className="text-yellow-400 font-bold text-base">{otherPlayers[0]?.coins}</span>
                 </div>
               </div>
             </Card>
@@ -173,11 +178,11 @@ const GameLayout = ({
         {/* Middle Center - Table and Cards */}
         <div className="flex items-center justify-center relative">
           <div className="relative">
-            {/* Responsive Table */}
+            {/* Double-sized Table for iPad optimization */}
             <img
               src="/Bill_images/table.png"
               alt="Game Table"
-              className="w-48 h-48 md:w-64 md:h-64 lg:w-80 lg:h-80 xl:w-96 xl:h-96 object-cover touch-image"
+              className="w-80 h-80 md:w-96 md:h-96 lg:w-[30rem] lg:h-[30rem] xl:w-[36rem] xl:h-[36rem] object-cover touch-image"
             />
             
             {/* Discard and Draw Piles - Responsive sizing */}
@@ -226,31 +231,8 @@ const GameLayout = ({
           </div>
         </div>
         
-        {/* Middle Right - Bot 2 - Much closer to table */}
-        <div className="flex items-center justify-center">
-          <div className="flex flex-col items-center">
-            <Card className={`p-1 md:p-2 transition-all duration-300 ${
-              otherPlayers[2]?.id === currentPlayerIndex 
-                ? 'ring-2 ring-blue-400 bg-blue-50/10 shadow-lg' 
-                : otherPlayers[2]?.isEliminated 
-                  ? 'opacity-50 bg-slate-800/50' 
-                  : 'bg-slate-800 hover:bg-slate-700'
-            }`}>
-              <div className="flex flex-col items-center">
-                <h3 className={`font-bold text-xs ${
-                  otherPlayers[2]?.id === currentPlayerIndex ? 'text-blue-400' : 'text-white'
-                }`}>
-                  Bot 2
-                  {otherPlayers[2]?.id === currentPlayerIndex && <span className="ml-1 text-xs">(Playing)</span>}
-                </h3>
-                <div className="flex items-center gap-1 mt-1">
-                  <Coins className="w-3 h-3 text-yellow-400" />
-                  <span className="text-yellow-400 font-bold text-sm">{otherPlayers[2]?.coins}</span>
-                </div>
-              </div>
-            </Card>
-          </div>
-        </div>
+        {/* Middle Right - Empty (no third player here anymore) */}
+        <div></div>
 
         {/* Bottom Row */}
         {/* Bottom Left - Score Panel */}

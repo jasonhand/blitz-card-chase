@@ -85,7 +85,7 @@ const BlitzGame = () => {
       knocker: prev.currentPlayerIndex,
       gamePhase: 'finalRound',
       finalRoundPlayers: new Set(),
-      finalRoundTurnsRemaining: 3,
+        finalRoundTurnsRemaining: 2,
       message: `${currentPlayer.name} knocked! Each player gets one final turn.`
     }));
     setTimeout(() => {
@@ -234,9 +234,8 @@ const BlitzGame = () => {
       // Create players
       const players = [
         createInitialPlayer(0, "You"),
-        createInitialPlayer(1, "Player 2"),
-        createInitialPlayer(2, "Player 3"),
-        createInitialPlayer(3, "Player 4")
+        createInitialPlayer(1, "Bill"),
+        createInitialPlayer(2, "Peggy")
       ];
 
       // Create new deck
@@ -351,7 +350,7 @@ const BlitzGame = () => {
       knocker: prev.currentPlayerIndex,
       gamePhase: 'finalRound',
       finalRoundPlayers: new Set(),
-      finalRoundTurnsRemaining: 3,
+      finalRoundTurnsRemaining: 2,
       message: `${prev.players[prev.currentPlayerIndex].name} knocked! Each player gets one final turn.`
     }));
     setTimeout(() => {
