@@ -231,8 +231,29 @@ const GameLayout = ({
           </div>
         </div>
         
-        {/* Middle Right - Empty (no third player here anymore) */}
-        <div></div>
+        {/* Middle Right - User Hand and Coins */}
+        <div className="flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            {/* User Hand */}
+            <UserHand
+              cards={userPlayer.cards}
+              onCardSelect={onCardSelect}
+              selectedCardIndex={selectedCardIndex}
+              canSelectCards={canSelectCards}
+              cardSize="normal"
+              onDiscardCard={turnPhase === 'discard' && isUserTurn && !isKnocker ? handleDiscardCard : undefined}
+            />
+            
+            {/* User Coins */}
+            <Card className="p-3 bg-slate-800 text-center">
+              <div className="flex items-center justify-center gap-2">
+                <Coins className="w-5 h-5 text-yellow-400" />
+                <span className="text-yellow-400 font-bold text-xl">{userPlayer.coins}</span>
+              </div>
+              <div className="text-slate-400 text-sm">Your Coins</div>
+            </Card>
+          </div>
+        </div>
 
         {/* Bottom Row */}
         {/* Bottom Left - Score Panel */}
@@ -264,28 +285,11 @@ const GameLayout = ({
           </Card>
         </div>
         
-        {/* Bottom Center - User Hand closest to table */}
-        <div className="flex items-end justify-center pb-2">
-          <UserHand
-            cards={userPlayer.cards}
-            onCardSelect={onCardSelect}
-            selectedCardIndex={selectedCardIndex}
-            canSelectCards={canSelectCards}
-            cardSize="normal"
-            onDiscardCard={turnPhase === 'discard' && isUserTurn && !isKnocker ? handleDiscardCard : undefined}
-          />
-        </div>
+        {/* Bottom Center - Empty now that user hand moved to right */}
+        <div></div>
         
-        {/* Bottom Right - User Coins */}
-        <div className="flex items-end justify-start pl-2">
-          <Card className="p-2 md:p-3 bg-slate-800 text-center">
-            <div className="flex items-center justify-center gap-2">
-              <Coins className="w-4 h-4 md:w-6 md:h-6 text-yellow-400" />
-              <span className="text-yellow-400 font-bold text-lg md:text-2xl">{userPlayer.coins}</span>
-            </div>
-            <div className="text-slate-400 text-xs md:text-sm">Your Coins</div>
-          </Card>
-        </div>
+        {/* Bottom Right - Empty now that user coins moved to right */}
+        <div></div>
       </div>
 
       {/* Floating Action Buttons */}
