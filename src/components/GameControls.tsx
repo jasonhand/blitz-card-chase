@@ -48,7 +48,7 @@ const GameControls = ({
       <Card className="p-6 bg-slate-800 text-center space-y-4">
         <div className="text-green-400 text-xl font-bold">Game Over!</div>
         <div className="text-white">{message}</div>
-        <Button onClick={onNewGame} className="bg-blue-600 hover:bg-blue-700">
+        <Button onClick={onNewGame} className="bg-blue-600 hover:bg-blue-700" data-dd-action-name="Start New Game">
           Start New Game
         </Button>
       </Card>
@@ -76,6 +76,7 @@ const GameControls = ({
               onClick={onKnock}
               disabled={!canKnock}
               className="bg-red-600 hover:bg-red-700 text-white font-bold"
+              data-dd-action-name="Knock Button"
             >
               <Hand className="w-4 h-4 mr-2" />
               Knock!
@@ -92,6 +93,7 @@ const GameControls = ({
                 <Button
                   onClick={onDrawFromDeck}
                   className="bg-blue-600 hover:bg-blue-700"
+                  data-dd-action-name="Draw From Deck"
                 >
                   <Shuffle className="w-4 h-4 mr-2" />
                   Draw from Deck
@@ -100,6 +102,7 @@ const GameControls = ({
                   <Button
                     onClick={onDrawFromDiscard}
                     className="bg-green-600 hover:bg-green-700"
+                    data-dd-action-name="Draw From Discard"
                   >
                     Draw from Discard
                   </Button>
@@ -118,6 +121,7 @@ const GameControls = ({
                 onClick={onDiscard}
                 disabled={!hasSelectedCard}
                 className="bg-purple-600 hover:bg-purple-700"
+                data-dd-action-name="Discard Selected Card"
               >
                 Discard Selected Card
               </Button>
@@ -135,6 +139,7 @@ const GameControls = ({
             <Button
               onClick={onDrawFromDeck}
               className="bg-blue-600 hover:bg-blue-700"
+              data-dd-action-name="Draw From Deck Final Round"
             >
               <Shuffle className="w-4 h-4 mr-2" />
               Draw from Deck
@@ -143,6 +148,7 @@ const GameControls = ({
               <Button
                 onClick={onDrawFromDiscard}
                 className="bg-green-600 hover:bg-green-700"
+                data-dd-action-name="Draw From Discard Final Round"
               >
                 Draw from Discard
               </Button>
@@ -158,6 +164,7 @@ const GameControls = ({
                 onClick={onDiscard}
                 disabled={!hasSelectedCard}
                 className="bg-purple-600 hover:bg-purple-700"
+                data-dd-action-name="Discard Selected Card Final Round"
               >
                 Discard Selected Card
               </Button>
@@ -172,6 +179,7 @@ const GameControls = ({
           onClick={onNewGame}
           variant="outline"
           className="text-slate-300 border-slate-600 hover:bg-slate-700"
+          data-dd-action-name="Start New Game"
         >
           Start New Game
         </Button>

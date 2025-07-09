@@ -6,9 +6,17 @@ import { makeAIDecision } from "@/utils/aiPlayer";
 import GameLayout from "./GameLayout";
 import GameControls from "./GameControls";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
+import { User as UserIcon } from "lucide-react";
 
 const BlitzGame = () => {
   const { toast } = useToast();
+  const [userName, setUserName] = useState<string>("");
+  const [showNameInput, setShowNameInput] = useState<boolean>(false);
+
+  // Restore game state and related hooks
   const [gameState, setGameState] = useState<GameState>({
     players: [],
     currentPlayerIndex: 0,
@@ -24,14 +32,41 @@ const BlitzGame = () => {
     message: "Starting new game...",
     discardLog: [],
   });
-
   const [selectedCardIndex, setSelectedCardIndex] = useState<number | null>(null);
   const [deckRemaining, setDeckRemaining] = useState(52);
   const [turnPhase, setTurnPhase] = useState<'decision' | 'draw' | 'discard'>('decision');
+  const [pendingDrawCard, setPendingDrawCard] = useState<Card | null>(null);
 
+  // On mount, check for saved name
   useEffect(() => {
-    initializeGame();
+    const savedName = localStorage.getItem("blitzUserName");
+    if (savedName && savedName.trim()) {
+      setUserName(savedName);
+      setShowNameInput(false);
+      initializeGameWithName(savedName);
+    } else {
+      setShowNameInput(true);
+    }
   }, []);
+
+  // Helper to start game with a given name
+  const initializeGameWithName = (name: string) => {
+    initializeGame(name);
+  };
+
+  const handleNameSubmit = () => {
+    if (userName.trim()) {
+      localStorage.setItem("blitzUserName", userName.trim());
+      setShowNameInput(false);
+      initializeGameWithName(userName.trim());
+    }
+  };
+
+  const handleNewGame = () => {
+    setShowNameInput(true);
+  };
+
+  // Remove automatic initialization - now handled by name input
 
   // Handle AI turns
   useEffect(() => {
@@ -86,7 +121,7 @@ const BlitzGame = () => {
       gamePhase: 'finalRound',
       finalRoundPlayers: new Set(),
         finalRoundTurnsRemaining: 2,
-      message: `${currentPlayer.name} knocked! Each player gets one final turn.`
+      message: `${currentPlayer.name === userName ? `${userName}, you knocked! Each player gets one final turn.` : `${currentPlayer.name} knocked! Each player gets one final turn.`}`
     }));
     setTimeout(() => {
       moveToNextPlayer();
@@ -227,13 +262,14 @@ const BlitzGame = () => {
     setTurnPhase('decision');
   };
 
-  const initializeGame = async () => {
+  const initializeGame = async (nameOverride?: string) => {
     try {
+      const nameToUse = nameOverride || userName;
       console.log("Initializing new game...");
       
       // Create players
       const players = [
-        createInitialPlayer(0, "You"),
+        createInitialPlayer(0, nameToUse),
         createInitialPlayer(1, "Bill"),
         createInitialPlayer(2, "Peggy")
       ];
@@ -279,7 +315,7 @@ const BlitzGame = () => {
         ...prev,
         players: updatedPlayers,
         gamePhase: 'playing',
-        message: `${updatedPlayers[0].name === 'You' ? "You're up bud! Draw - or Knock!" : updatedPlayers[0].name + "'s turn"}`
+        message: `${updatedPlayers[0].name === userName ? `${userName}, you're up! Draw or knock!` : updatedPlayers[0].name + "'s turn"}`
       }));
       
       setDeckRemaining(drawResponse.remaining);
@@ -351,7 +387,7 @@ const BlitzGame = () => {
       gamePhase: 'finalRound',
       finalRoundPlayers: new Set(),
       finalRoundTurnsRemaining: 2,
-      message: `${prev.players[prev.currentPlayerIndex].name} knocked! Each player gets one final turn.`
+      message: `${prev.players[prev.currentPlayerIndex].name === userName ? `${userName}, you knocked! Each player gets one final turn.` : `${prev.players[prev.currentPlayerIndex].name} knocked! Each player gets one final turn.`}`
     }));
     setTimeout(() => {
       moveToNextPlayer();
@@ -361,33 +397,73 @@ const BlitzGame = () => {
 
   const handleDrawFromDeck = async () => {
     if (!gameState.deckId) return;
-    
     try {
       console.log("Drawing from deck...");
       const drawResponse = await deckApi.drawCards(gameState.deckId, 1);
-      
+      // If deck is empty, reshuffle discard pile (except top card)
+      if (!drawResponse.cards || drawResponse.cards.length === 0) {
+        // Only reshuffle if there are enough cards in discard pile
+        if (gameState.discardPile.length > 1) {
+          // Keep the top card, reshuffle the rest
+          const topDiscard = gameState.discardPile[gameState.discardPile.length - 1];
+          const toReshuffle = gameState.discardPile.slice(0, -1);
+          // Simulate new deck by shuffling toReshuffle
+          const shuffled = [...toReshuffle].sort(() => Math.random() - 0.5);
+          // Create a new deck locally (since API doesn't support custom decks)
+          // We'll just use the shuffled array as the new deck
+          // Draw the top card from the shuffled deck
+          const newCard = shuffled[0];
+          const newDeck = shuffled.slice(1);
+          // Update state: new deck is newDeck, discard pile is [topDiscard]
+          setGameState(prev => ({
+            ...prev,
+            discardPile: [topDiscard],
+            // We'll store the new deck in a local variable for this turn
+            // (not in state, since the API doesn't support it)
+          }));
+          // Continue as if we drew newCard
+          const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+          const updatedPlayer = calculatePlayerScores({
+            ...currentPlayer,
+            cards: [...currentPlayer.cards, newCard]
+          });
+          setGameState(prev => ({
+            ...prev,
+            players: prev.players.map((player, index) => 
+              index === prev.currentPlayerIndex ? updatedPlayer : player
+            ),
+            message: `${updatedPlayer.name === userName ? `${userName}, you drew a card. Select a card to discard.` : `${updatedPlayer.name} drew a card. Select a card to discard.`}`
+          }));
+          setDeckRemaining(newDeck.length);
+          setTurnPhase('discard');
+          return;
+        } else {
+          toast({
+            title: "No Cards Left",
+            description: "No cards left in the deck or discard pile to draw.",
+            variant: "destructive"
+          });
+          return;
+        }
+      }
       const currentPlayer = gameState.players[gameState.currentPlayerIndex];
       const updatedPlayer = calculatePlayerScores({
         ...currentPlayer,
         cards: [...currentPlayer.cards, drawResponse.cards[0]]
       });
-
       // Check for BLITZ (31) immediately after drawing
       if (checkForBlitz(updatedPlayer)) {
         return; // Game state already updated by checkForBlitz
       }
-
       setGameState(prev => ({
         ...prev,
         players: prev.players.map((player, index) => 
           index === prev.currentPlayerIndex ? updatedPlayer : player
         ),
-        message: `${updatedPlayer.name} drew a card. Select a card to discard.`
+        message: `${updatedPlayer.name === userName ? `${userName}, you drew a card. Select a card to discard.` : `${updatedPlayer.name} drew a card. Select a card to discard.`}`
       }));
-      
       setDeckRemaining(drawResponse.remaining);
       setTurnPhase('discard');
-      
     } catch (error) {
       console.error("Error drawing from deck:", error);
       toast({
@@ -421,25 +497,81 @@ const BlitzGame = () => {
         index === prev.currentPlayerIndex ? updatedPlayer : player
       ),
       discardPile: prev.discardPile.slice(0, -1),
-      message: `${updatedPlayer.name} drew from discard. Select a card to discard.`
+              message: `${updatedPlayer.name === userName ? `${userName}, you drew from discard. Select a card to discard.` : `${updatedPlayer.name} drew from discard. Select a card to discard.`}`
     }));
     
     setTurnPhase('discard');
   };
 
   const handleDiscard = () => {
+    if (pendingDrawCard !== null) {
+      // User must select either a hand card (0,1,2) or the pending card (-1)
+      if (selectedCardIndex === null) return;
+      const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+      let cardToDiscard;
+      let newHand;
+      if (selectedCardIndex === -1) {
+        // Discard the pending card, hand remains unchanged
+        cardToDiscard = pendingDrawCard;
+        newHand = [...currentPlayer.cards];
+      } else {
+        // Discard from hand, add pending card to hand
+        cardToDiscard = currentPlayer.cards[selectedCardIndex];
+        newHand = [...currentPlayer.cards];
+        newHand[selectedCardIndex] = pendingDrawCard;
+      }
+      const updatedPlayer = calculatePlayerScores({
+        ...currentPlayer,
+        cards: newHand
+      });
+      setGameState(prev => ({
+        ...prev,
+        players: prev.players.map((player, index) => 
+          index === prev.currentPlayerIndex ? updatedPlayer : player
+        ),
+        discardPile: [...prev.discardPile, cardToDiscard],
+        discardLog: [
+          { playerName: currentPlayer.name, card: cardToDiscard, turn: prev.roundNumber },
+          ...prev.discardLog
+        ]
+      }));
+      setPendingDrawCard(null);
+      setSelectedCardIndex(null);
+      
+      // Check if final round is complete
+      if (gameState.gamePhase === 'finalRound') {
+        const newTurnsRemaining = gameState.finalRoundTurnsRemaining - 1;
+        
+        if (newTurnsRemaining <= 0) {
+          toast({
+            title: "Showdown!",
+            description: "Let's see your hand."
+          });
+          console.log("Final round complete (3 turns taken), calculating scores...");
+          calculateRoundResults();
+          return;
+        } else {
+          setGameState(prev => ({
+            ...prev,
+            finalRoundTurnsRemaining: newTurnsRemaining
+          }));
+        }
+      }
+      
+      // Move to next player
+      moveToNextPlayer();
+      setTurnPhase('decision');
+      return;
+    }
+    // If no pendingDrawCard, fallback to old logic (should not happen in normal play)
     if (selectedCardIndex === null) return;
-    
-    console.log(`Discarding card at index ${selectedCardIndex}`);
     const currentPlayer = gameState.players[gameState.currentPlayerIndex];
     const cardToDiscard = currentPlayer.cards[selectedCardIndex];
     const remainingCards = currentPlayer.cards.filter((_, index) => index !== selectedCardIndex);
-    
     const updatedPlayer = calculatePlayerScores({
       ...currentPlayer,
       cards: remainingCards
     });
-
     setGameState(prev => ({
       ...prev,
       players: prev.players.map((player, index) => 
@@ -451,7 +583,6 @@ const BlitzGame = () => {
         ...prev.discardLog
       ]
     }));
-    
     setSelectedCardIndex(null);
     
     // Check if final round is complete
@@ -610,57 +741,128 @@ const BlitzGame = () => {
   const userPlayer = gameState.players.find(p => p.id === 0);
   const topDiscardCard = gameState.discardPile[gameState.discardPile.length - 1] || null;
 
+  if (showNameInput) {
+    return (
+      <div className="h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <Dialog open={showNameInput} onOpenChange={setShowNameInput}>
+          <DialogContent className="bg-slate-800 border-2 border-yellow-400 p-8">
+            <DialogHeader>
+              <DialogTitle className="text-3xl font-bold text-yellow-300 text-center mb-6">
+                Welcome to Blitz with Bill & Peggy!
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-6">
+              <div className="text-center text-white text-lg mb-4">
+                Enter your name to begin your card game adventure
+              </div>
+              <Input
+                placeholder="Enter your name"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleNameSubmit();
+                  }
+                }}
+                className="text-lg p-4 bg-slate-700 border-yellow-400 text-white placeholder:text-slate-400"
+                autoFocus
+              />
+              <Button 
+                onClick={handleNameSubmit}
+                disabled={!userName.trim()}
+                className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold text-lg py-4"
+              >
+                Start Game
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  }
+
+  // Change Name button (top right corner)
+  // Only show if a name is set and not in the name input dialog
+  const showChangeNameBtn = !!userName && !showNameInput;
+
   if (gameState.gamePhase === 'setup' || !userPlayer) {
     return (
-      <div className="max-w-7xl mx-auto text-center">
-        <div className="text-white text-lg">Setting up game...</div>
+      <div className="max-w-7xl mx-auto text-center relative">
+        {showChangeNameBtn && (
+          <button
+            className="absolute top-4 left-4 bg-slate-800/80 hover:bg-yellow-400 hover:text-black text-yellow-300 rounded-full p-4 shadow-lg border-2 border-yellow-400 transition-colors flex items-center justify-center"
+            onClick={() => setShowNameInput(true)}
+            aria-label="Change Name"
+          >
+            <UserIcon className="w-8 h-8" />
+          </button>
+        )}
+        <div className="mt-20 text-white text-lg">Setting up game...</div>
       </div>
     );
   }
 
   if (gameState.gamePhase === 'gameEnd') {
     return (
-      <div className="max-w-7xl mx-auto">
-        <GameControls
-          gamePhase={gameState.gamePhase}
-          isCurrentPlayerTurn={false}
-          canKnock={false}
-          canDraw={false}
-          canDiscard={false}
-          hasSelectedCard={false}
-          topDiscardCard={topDiscardCard}
-          onKnock={handleKnock}
-          onDrawFromDeck={handleDrawFromDeck}
-          onDrawFromDiscard={handleDrawFromDiscard}
-          onDiscard={handleDiscard}
-          onNewGame={initializeGame}
-          message={gameState.message}
-        />
+      <div className="max-w-7xl mx-auto relative">
+        {showChangeNameBtn && (
+          <button
+            className="absolute top-4 left-4 bg-slate-800/80 hover:bg-yellow-400 hover:text-black text-yellow-300 rounded-full p-4 shadow-lg border-2 border-yellow-400 transition-colors flex items-center justify-center"
+            onClick={() => setShowNameInput(true)}
+            aria-label="Change Name"
+          >
+            <UserIcon className="w-8 h-8" />
+          </button>
+        )}
+        <div>
+          <GameControls
+            gamePhase={gameState.gamePhase}
+            isCurrentPlayerTurn={false}
+            canKnock={false}
+            canDraw={false}
+            canDiscard={false}
+            hasSelectedCard={false}
+            topDiscardCard={topDiscardCard}
+            onKnock={handleKnock}
+            onDrawFromDeck={handleDrawFromDeck}
+            onDrawFromDiscard={handleDrawFromDiscard}
+            onDiscard={handleDiscard}
+            onNewGame={handleNewGame}
+            message={gameState.message}
+          />
+        </div>
       </div>
     );
   }
 
   return (
-    <GameLayout
-      players={gameState.players}
-      userPlayer={userPlayer}
-      currentPlayerIndex={gameState.currentPlayerIndex}
-      topDiscardCard={topDiscardCard}
-      deckRemaining={deckRemaining}
-      selectedCardIndex={selectedCardIndex}
-      turnPhase={turnPhase}
-      gamePhase={gameState.gamePhase}
-      canKnock={turnPhase === 'decision' && !gameState.hasKnocked}
-      onCardSelect={setSelectedCardIndex}
-      onDrawFromDeck={handleDrawFromDeck}
-      onDrawFromDiscard={handleDrawFromDiscard}
-      onKnock={handleKnock}
-      onDiscard={handleDiscard}
-      hasSelectedCard={selectedCardIndex !== null}
-      message={gameState.message}
-      knocker={gameState.knocker}
-      discardLog={gameState.discardLog}
-    />
+    <>
+      <div>
+        <GameLayout
+          players={gameState.players}
+          userPlayer={userPlayer}
+          currentPlayerIndex={gameState.currentPlayerIndex}
+          topDiscardCard={topDiscardCard}
+          deckRemaining={deckRemaining}
+          selectedCardIndex={selectedCardIndex}
+          turnPhase={turnPhase}
+          gamePhase={gameState.gamePhase}
+          canKnock={turnPhase === 'decision' && !gameState.hasKnocked}
+          onCardSelect={setSelectedCardIndex}
+          onDrawFromDeck={handleDrawFromDeck}
+          onDrawFromDiscard={handleDrawFromDiscard}
+          onKnock={handleKnock}
+          onDiscard={handleDiscard}
+          hasSelectedCard={selectedCardIndex !== null}
+          message={gameState.message}
+          knocker={gameState.knocker}
+          discardLog={gameState.discardLog}
+          showChangeNameBtn={showChangeNameBtn}
+          onChangeName={() => setShowNameInput(true)}
+          pendingDrawCard={pendingDrawCard}
+        />
+      </div>
+    </>
   );
 };
 

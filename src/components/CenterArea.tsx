@@ -11,7 +11,7 @@ const CenterArea = ({ topDiscardCard, deckRemaining }: CenterAreaProps) => {
   return (
     <div className="flex justify-center gap-8 items-center">
       {/* Deck Pile */}
-      <Card className="p-4 bg-slate-800 text-center">
+      <Card className="p-4 bg-slate-800 text-center" data-dd-action-name="Deck Pile">
         <div className="text-white font-semibold mb-2">Deck</div>
         <div className="w-16 h-24 bg-gradient-to-br from-blue-900 to-purple-900 rounded-lg border-2 border-blue-400 flex items-center justify-center shadow-lg">
           <div className="text-white text-xs">
@@ -22,7 +22,7 @@ const CenterArea = ({ topDiscardCard, deckRemaining }: CenterAreaProps) => {
       </Card>
 
       {/* Discard Pile */}
-      <Card className="p-4 bg-slate-800 text-center">
+      <Card className="p-4 bg-slate-800 text-center" data-dd-action-name="Discard Pile">
         <div className="text-white font-semibold mb-2">Discard</div>
         <div className="w-16 h-24 flex items-center justify-center">
           {topDiscardCard ? (

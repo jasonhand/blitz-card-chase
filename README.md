@@ -1,17 +1,17 @@
-# Bill's Blitz - A Card Game Adventure
+# Blitz with Bill & Peggy - A Card Game Adventure
 
-![Bill's Blitz](https://img.shields.io/badge/Game-Bill's%20Blitz-blue?style=for-the-badge)
+![Blitz with Bill & Peggy](https://img.shields.io/badge/Game-Bill's%20Blitz-blue?style=for-the-badge)
 ![React](https://img.shields.io/badge/React-18.3.1-blue?style=for-the-badge&logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.5.3-blue?style=for-the-badge&logo=typescript)
 ![Vite](https://img.shields.io/badge/Vite-5.4.1-purple?style=for-the-badge&logo=vite)
 
 ## 🎮 Live Demo
 
-**🎯 [Play Bill's Blitz Now!](https://blitz-card-chase.lovable.app/)**
+**🎯 [Play Blitz with Bill & Peggy Now!](https://blitz-card-chase.lovable.app/)**
 
-## 🎮 What is Bill's Blitz?
+## 🎮 What is Blitz with Bill & Peggy?
 
-**Bill's Blitz** is an interactive web-based card game where you compete against AI opponents (including the charismatic Bill) in a strategic card game. The goal is to build the highest-scoring hand by collecting cards of the same suit, with the ultimate objective of reaching exactly 31 points - a "Blitz!"
+**Blitz with Bill & Peggy** is an interactive web-based card game where you compete against AI opponents (including the charismatic Bill) in a strategic card game. The goal is to build the highest-scoring hand by collecting cards of the same suit, with the ultimate objective of reaching exactly 31 points - a "Blitz!"
 
 ### 🎯 Game Objective
 - Collect cards of the same suit to score points

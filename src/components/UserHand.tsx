@@ -41,6 +41,7 @@ const UserHand = ({
             minHeight: cardSize === 'large' ? '112px' : '80px',
             minWidth: cardSize === 'large' ? '80px' : '64px'
           }}
+          data-dd-action-name={`${onDiscardCard ? 'Discard Card' : 'Select Card'} - ${card.value} of ${card.suit}`}
         >
           <img
             src={card.image}
