@@ -120,8 +120,8 @@ const GameLayout = ({
           </div>
         </div>
 
-        {/* Bill - Bottom Left */}
-        <div className="absolute bottom-16 left-4 z-20 flex items-center gap-4">
+        {/* Bill - Left Side (moved higher for iPad visibility) */}
+        <div className="absolute top-1/2 left-4 transform -translate-y-1/2 z-20 flex items-center gap-4">
           <img
             src="/Bill_images/Bill_pixel.png"
             alt="Bill"
@@ -231,11 +231,11 @@ const GameLayout = ({
           </div>
         </div>
 
-        {/* User Area - Right Side */}
+        {/* User Area - Right Side (adjusted for iPad visibility) */}
         <div className="absolute top-1/2 right-4 transform -translate-y-1/2 z-20">
-          <div className="flex flex-col items-center gap-4 max-w-sm">
+          <div className="flex flex-col items-center gap-3 max-w-sm">
             {/* User Name */}
-            <h3 className="font-extrabold text-2xl md:text-3xl text-yellow-100 text-center">{userPlayer.name}</h3>
+            <h3 className="font-extrabold text-xl md:text-2xl text-yellow-100 text-center">{userPlayer.name}</h3>
             
             {/* User Hand */}
             <div className="flex flex-col items-center gap-2">
@@ -251,61 +251,62 @@ const GameLayout = ({
             
             {/* User Coins */}
             <div className="flex items-center gap-2">
-              <Coins className="w-6 h-6 text-yellow-400" />
-              <span className="text-yellow-400 font-bold text-xl">{userPlayer.coins}</span>
+              <Coins className="w-5 h-5 text-yellow-400" />
+              <span className="text-yellow-400 font-bold text-lg">{userPlayer.coins}</span>
             </div>
+
+            {/* User Score Panel */}
+            <Card className="p-3 bg-slate-800/90 backdrop-blur-sm shadow-2xl border-2 border-yellow-400">
+              <div className="flex gap-2 text-sm font-bold justify-center mb-2">
+                {Object.entries(userPlayer.scores).map(([suit, score]) => (
+                  <div
+                    key={suit}
+                    className={`flex flex-col items-center p-1 rounded-lg ${
+                      suit === userPlayer.bestSuit 
+                        ? 'bg-green-600/30 text-green-300 border border-green-400' 
+                        : 'bg-slate-700/70 text-slate-200'
+                    }`}
+                  >
+                    <span className="text-sm">{suitEmojis[suit]}</span>
+                    <span className="text-lg">{score}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="text-center">
+                <div className="text-xl font-extrabold text-green-400">
+                  {userPlayer.bestScore}
+                </div>
+                <div className="text-xs text-slate-400 capitalize">
+                  Best: {suitEmojis[userPlayer.bestSuit]} {userPlayer.bestSuit}
+                </div>
+              </div>
+            </Card>
           </div>
         </div>
 
-        {/* Score Panel - Bottom Left */}
-        <div className="absolute bottom-4 left-4 z-40">
-          <Card className="p-3 bg-slate-800/90 backdrop-blur-sm shadow-2xl border-2 border-yellow-400">
-            <div className="flex gap-2 text-sm font-bold justify-center mb-2">
-              {Object.entries(userPlayer.scores).map(([suit, score]) => (
-                <div
-                  key={suit}
-                  className={`flex flex-col items-center p-1 rounded-lg ${
-                    suit === userPlayer.bestSuit 
-                      ? 'bg-green-600/30 text-green-300 border border-green-400' 
-                      : 'bg-slate-700/70 text-slate-200'
-                  }`}
-                >
-                  <span className="text-sm">{suitEmojis[suit]}</span>
-                  <span className="text-lg">{score}</span>
+
+        {/* Discard Log - Toggleable */}
+        {showDiscardLog && (
+          <div className="absolute top-16 right-4 z-30">
+            <div className="w-72 max-h-80 bg-slate-900/95 border-2 border-yellow-400 overflow-y-auto p-3 flex flex-col gap-2 rounded-lg shadow-2xl scrollbar-hide">
+              <div className="text-yellow-300 font-bold text-base mb-2">Discard Log</div>
+              {discardLog.length === 0 && <div className="text-slate-400 text-sm">No discards yet.</div>}
+              {discardLog.slice(0, 5).map((entry, idx) => (
+                <div key={idx} className="flex items-center gap-2 bg-slate-800 rounded p-2 shadow">
+                  <span className="font-bold text-yellow-200 text-sm">{entry.playerName}</span>
+                  <span className="text-white text-sm">discarded</span>
+                  <span className="bg-slate-700 px-2 py-1 rounded text-green-300 font-mono text-sm flex items-center gap-1">
+                    {entry.card.value} <span>{suitEmojis[entry.card.suit.toLowerCase()]}</span>
+                  </span>
                 </div>
               ))}
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-extrabold text-green-400">
-                {userPlayer.bestScore}
-              </div>
-              <div className="text-xs text-slate-400 capitalize">
-                Best: {suitEmojis[userPlayer.bestSuit]} {userPlayer.bestSuit}
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        {/* Discard Log - Top Right */}
-        <div className="absolute top-16 right-4 z-30">
-          <div className="w-72 max-h-80 bg-slate-900/95 border-2 border-yellow-400 overflow-y-auto p-3 flex flex-col gap-2 rounded-lg shadow-2xl scrollbar-hide">
-            <div className="text-yellow-300 font-bold text-base mb-2">Discard Log</div>
-            {discardLog.length === 0 && <div className="text-slate-400 text-sm">No discards yet.</div>}
-            {discardLog.slice(0, 5).map((entry, idx) => (
-              <div key={idx} className="flex items-center gap-2 bg-slate-800 rounded p-2 shadow">
-                <span className="font-bold text-yellow-200 text-sm">{entry.playerName}</span>
-                <span className="text-white text-sm">discarded</span>
-                <span className="bg-slate-700 px-2 py-1 rounded text-green-300 font-mono text-sm flex items-center gap-1">
-                  {entry.card.value} <span>{suitEmojis[entry.card.suit.toLowerCase()]}</span>
-                </span>
-              </div>
-            ))}
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Top-level action buttons: Change Name and Rules */}
-      <div className="absolute bottom-4 right-4 z-50 flex items-center gap-2">
+      {/* Top-level action buttons: Change Name, Rules, and Discard Log */}
+      <div className="absolute top-4 right-4 z-50 flex items-center gap-2">
         {showChangeNameBtn && onChangeName && (
           <button
             className="bg-slate-800/80 hover:bg-yellow-400 hover:text-black text-yellow-300 rounded-full p-3 shadow-lg border-2 border-yellow-400 transition-colors flex items-center justify-center"
@@ -316,6 +317,14 @@ const GameLayout = ({
             <UserIcon className="w-6 h-6" />
           </button>
         )}
+        <button
+          className="bg-slate-800/80 hover:bg-yellow-400 hover:text-black text-yellow-300 rounded-full p-3 shadow-lg border-2 border-yellow-400 transition-colors flex items-center justify-center"
+          onClick={() => setShowDiscardLog(!showDiscardLog)}
+          aria-label="Toggle Discard Log"
+          data-dd-action-name="Toggle Discard Log"
+        >
+          <Hand className="w-6 h-6" />
+        </button>
         <Dialog open={rulesOpen} onOpenChange={setRulesOpen}>
           <DialogTrigger asChild>
             <button
