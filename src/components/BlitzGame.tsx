@@ -462,83 +462,87 @@ const BlitzGame = () => {
       
       // If deck is empty, reshuffle discard pile
       if (!drawResponse.cards || drawResponse.cards.length === 0 || drawResponse.remaining === 0) {
-        console.log("DECK EMPTY - Starting reshuffle process...");
-        if (gameState.discardPile.length > 1) {
-          console.log("Discard pile has cards, reshuffling...");
+        try {
+          if (gameState.discardPile.length > 1) {
+            toast({
+              title: "Reshuffling Deck",
+              description: "Deck is empty. Reshuffling discard pile..."
+            });
+            
+            // Keep the top discard card, reshuffle the rest into the deck
+            const topDiscard = gameState.discardPile[gameState.discardPile.length - 1];
+            
+            // Create a new deck 
+            const newDeckResponse = await deckApi.createNewDeck();
+            const newDeckId = newDeckResponse.deck_id;
+            
+            // Draw from new deck
+            const newDrawResponse = await deckApi.drawCards(newDeckId, 1);
+            
+            if (!newDrawResponse.cards || newDrawResponse.cards.length === 0) {
+              throw new Error("Failed to draw from new deck");
+            }
+            
+            const drawnCard = newDrawResponse.cards[0];
+            
+            // Update game state - deck is now the new deck, discard pile has only top card
+            setGameState(prev => ({
+              ...prev,
+              deckId: newDeckId,
+              discardPile: [topDiscard],
+              message: "Deck reshuffled! Game continues..."
+            }));
+            
+            setDeckRemaining(newDrawResponse.remaining);
+            
+            // Continue with the drawn card
+            const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+            setPendingDrawCard(drawnCard);
+            setGameState(prev => ({
+              ...prev,
+              message: `${currentPlayer.name === userName ? `${userName}, you drew a card. Select a card to discard.` : `${currentPlayer.name} drew a card. Select a card to discard.`}`
+            }));
+            setTurnPhase('discard');
+            return;
+          } else {
+            // If only one card in discard pile, create new deck and continue
+            toast({
+              title: "Reshuffling Deck", 
+              description: "Creating fresh deck to continue game..."
+            });
+            
+            const newDeckResponse = await deckApi.createNewDeck();
+            const newDeckId = newDeckResponse.deck_id;
+            const newDrawResponse = await deckApi.drawCards(newDeckId, 1);
+            
+            if (!newDrawResponse.cards || newDrawResponse.cards.length === 0) {
+              throw new Error("Failed to draw from fresh deck");
+            }
+            
+            setGameState(prev => ({
+              ...prev,
+              deckId: newDeckId,
+              message: "Fresh deck created! Game continues..."
+            }));
+            
+            setDeckRemaining(newDrawResponse.remaining);
+            
+            const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+            setPendingDrawCard(newDrawResponse.cards[0]);
+            setGameState(prev => ({
+              ...prev,
+              message: `${currentPlayer.name === userName ? `${userName}, you drew a card. Select a card to discard.` : `${currentPlayer.name} drew a card. Select a card to discard.`}`
+            }));
+            setTurnPhase('discard');
+            return;
+          }
+        } catch (error) {
+          console.error("Error during deck reshuffle:", error);
           toast({
-            title: "Reshuffling Deck",
-            description: "Deck is empty. Reshuffling discard pile..."
+            title: "Game Error",
+            description: "Unable to reshuffle deck. Please restart the game.",
+            variant: "destructive"
           });
-          
-          // Keep the top discard card, reshuffle the rest into the deck
-          const topDiscard = gameState.discardPile[gameState.discardPile.length - 1];
-          const cardsToReshuffle = gameState.discardPile.slice(0, -1);
-          
-          // Shuffle the cards to reshuffle randomly
-          const shuffledCards = [...cardsToReshuffle].sort(() => Math.random() - 0.5);
-          
-          // Create a new deck with the shuffled cards
-          console.log("Creating new deck...");
-          const newDeckResponse = await deckApi.createNewDeck();
-          const newDeckId = newDeckResponse.deck_id;
-          console.log("New deck created:", newDeckId);
-          
-          // Draw from new deck (simulating the reshuffled cards)
-          console.log("Drawing from new deck...");
-          const newDrawResponse = await deckApi.drawCards(newDeckId, 1);
-          const drawnCard = newDrawResponse.cards[0];
-          console.log("Card drawn from new deck:", drawnCard);
-          
-          // Update game state - deck is now the new deck, discard pile has only top card
-          console.log("Updating game state with new deck...");
-          setGameState(prev => ({
-            ...prev,
-            deckId: newDeckId,
-            discardPile: [topDiscard],
-            message: "Deck reshuffled! Game continues..."
-          }));
-          
-          setDeckRemaining(newDrawResponse.remaining);
-          console.log("Deck reshuffle complete, continuing turn...");
-          
-          // Continue with the drawn card
-          const currentPlayer = gameState.players[gameState.currentPlayerIndex];
-          setPendingDrawCard(drawnCard);
-          setGameState(prev => ({
-            ...prev,
-            message: `${currentPlayer.name === userName ? `${userName}, you drew a card. Select a card to discard.` : `${currentPlayer.name} drew a card. Select a card to discard.`}`
-          }));
-          setTurnPhase('discard');
-          return;
-        } else {
-          // If only one card in discard pile, create new deck and continue
-          console.log("Creating fresh deck (only one discard card)...");
-          toast({
-            title: "Reshuffling Deck", 
-            description: "Creating fresh deck to continue game..."
-          });
-          
-          const newDeckResponse = await deckApi.createNewDeck();
-          const newDeckId = newDeckResponse.deck_id;
-          const newDrawResponse = await deckApi.drawCards(newDeckId, 1);
-          console.log("Fresh deck created and card drawn");
-          
-          setGameState(prev => ({
-            ...prev,
-            deckId: newDeckId,
-            message: "Fresh deck created! Game continues..."
-          }));
-          
-          setDeckRemaining(newDrawResponse.remaining);
-          console.log("Fresh deck setup complete");
-          
-          const currentPlayer = gameState.players[gameState.currentPlayerIndex];
-          setPendingDrawCard(newDrawResponse.cards[0]);
-          setGameState(prev => ({
-            ...prev,
-            message: `${currentPlayer.name === userName ? `${userName}, you drew a card. Select a card to discard.` : `${currentPlayer.name} drew a card. Select a card to discard.`}`
-          }));
-          setTurnPhase('discard');
           return;
         }
       }
@@ -687,29 +691,85 @@ const BlitzGame = () => {
     setTurnPhase('decision');
   };
 
+  const processPlayerElimination = (gameState: GameState): GameState => {
+    const updatedPlayers = gameState.players.map(player => {
+      if (player.coins <= 0 && !player.isEliminated) {
+        toast({
+          title: "Player Eliminated",
+          description: `${player.name} is out of the game!`,
+          variant: "destructive"
+        });
+      }
+      return {
+        ...player,
+        isEliminated: player.coins <= 0
+      };
+    });
+
+    const activePlayers = updatedPlayers.filter(p => !p.isEliminated);
+    
+    if (activePlayers.length === 1) {
+      return {
+        ...gameState,
+        players: updatedPlayers,
+        gamePhase: 'gameEnd',
+        winner: activePlayers[0],
+        message: `🎉 ${activePlayers[0].name} wins the game!`
+      };
+    }
+
+    return {
+      ...gameState,
+      players: updatedPlayers
+    };
+  };
+
   const moveToNextPlayer = () => {
-    const activePlayers = gameState.players.filter(p => !p.isEliminated);
-    if (activePlayers.length <= 1) return;
-    let nextIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
-    // Always skip eliminated players
-    while (gameState.players[nextIndex].isEliminated) {
-      nextIndex = (nextIndex + 1) % gameState.players.length;
-    }
-    // In final round, no special skipping - just skip eliminated players
-    const nextPlayer = gameState.players[nextIndex];
-    let phaseMessage = "";
-    if (gameState.gamePhase === 'finalRound') {
-      phaseMessage = `${nextPlayer.name}'s final turn`;
-    } else {
-      phaseMessage = nextIndex === 0 ? 
-        `You're up bud! Draw - or Knock!` : 
-        `${nextPlayer.name}'s turn`;
-    }
-    setGameState(prev => ({
-      ...prev,
-      currentPlayerIndex: nextIndex,
-      message: phaseMessage
-    }));
+    setGameState(prev => {
+      // First check for eliminations
+      const updatedState = processPlayerElimination(prev);
+      
+      if (updatedState.gamePhase === 'gameEnd') {
+        return updatedState;
+      }
+
+      const activePlayers = updatedState.players.filter(p => !p.isEliminated);
+      if (activePlayers.length <= 1) {
+        return updatedState;
+      }
+      
+      let nextIndex = (prev.currentPlayerIndex + 1) % prev.players.length;
+      
+      // Skip eliminated players
+      let safetyCounter = 0;
+      while (updatedState.players[nextIndex].isEliminated && safetyCounter < prev.players.length) {
+        nextIndex = (nextIndex + 1) % prev.players.length;
+        safetyCounter++;
+      }
+      
+      // If we couldn't find a non-eliminated player, something went wrong
+      if (safetyCounter >= prev.players.length) {
+        console.error("Could not find next active player");
+        return updatedState;
+      }
+      
+      const nextPlayer = updatedState.players[nextIndex];
+      let phaseMessage = "";
+      
+      if (prev.gamePhase === 'finalRound') {
+        phaseMessage = `${nextPlayer.name}'s final turn`;
+      } else {
+        phaseMessage = nextIndex === 0 ? 
+          `You're up! Draw or knock!` : 
+          `${nextPlayer.name}'s turn`;
+      }
+      
+      return {
+        ...updatedState,
+        currentPlayerIndex: nextIndex,
+        message: phaseMessage
+      };
+    });
   };
 
   const calculateRoundResults = () => {
