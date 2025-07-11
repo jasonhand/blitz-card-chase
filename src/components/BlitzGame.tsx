@@ -137,11 +137,70 @@ const BlitzGame = () => {
       console.log(`${currentPlayer.name} drawing from deck...`);
       
       const drawResponse = await deckApi.drawCards(gameState.deckId, 1);
+      let updatedPlayer: Player;
       
-      const updatedPlayer = calculatePlayerScores({
-        ...currentPlayer,
-        cards: [...currentPlayer.cards, drawResponse.cards[0]]
-      });
+      // If deck is empty, reshuffle discard pile
+      if (!drawResponse.cards || drawResponse.cards.length === 0 || drawResponse.remaining === 0) {
+        if (gameState.discardPile.length > 1) {
+          toast({
+            title: "Reshuffling Deck",
+            description: `${currentPlayer.name} triggered deck reshuffle...`
+          });
+          
+          // Keep the top discard card, reshuffle the rest into the deck
+          const topDiscard = gameState.discardPile[gameState.discardPile.length - 1];
+          
+          // Create a new deck
+          const newDeckResponse = await deckApi.createNewDeck();
+          const newDeckId = newDeckResponse.deck_id;
+          
+          // Draw from new deck (simulating the reshuffled cards)
+          const newDrawResponse = await deckApi.drawCards(newDeckId, 1);
+          const drawnCard = newDrawResponse.cards[0];
+          
+          // Update game state - deck is now the new deck, discard pile has only top card
+          setGameState(prev => ({
+            ...prev,
+            deckId: newDeckId,
+            discardPile: [topDiscard],
+            message: `${currentPlayer.name} caused deck reshuffle! Game continues...`
+          }));
+          
+          setDeckRemaining(newDrawResponse.remaining);
+          
+          // Continue with AI turn using the drawn card
+          updatedPlayer = calculatePlayerScores({
+            ...currentPlayer,
+            cards: [...currentPlayer.cards, drawnCard]
+          });
+        } else {
+          // If only one card in discard pile, create new deck and continue
+          const newDeckResponse = await deckApi.createNewDeck();
+          const newDeckId = newDeckResponse.deck_id;
+          const newDrawResponse = await deckApi.drawCards(newDeckId, 1);
+          
+          setGameState(prev => ({
+            ...prev,
+            deckId: newDeckId,
+            message: `${currentPlayer.name} got a fresh deck! Game continues...`
+          }));
+          
+          setDeckRemaining(newDrawResponse.remaining);
+          
+          // Continue with AI turn using the drawn card
+          updatedPlayer = calculatePlayerScores({
+            ...currentPlayer,
+            cards: [...currentPlayer.cards, newDrawResponse.cards[0]]
+          });
+        }
+      } else {
+        // Normal draw - deck has cards
+        updatedPlayer = calculatePlayerScores({
+          ...currentPlayer,
+          cards: [...currentPlayer.cards, drawResponse.cards[0]]
+        });
+        setDeckRemaining(drawResponse.remaining);
+      }
 
       // Check for BLITZ (31) immediately after drawing
       if (checkForBlitz(updatedPlayer)) {
@@ -170,7 +229,7 @@ const BlitzGame = () => {
         message: `${finalPlayer.name} drew from deck and discarded.`
       }));
       
-      setDeckRemaining(drawResponse.remaining);
+      // Note: deckRemaining already set above in each reshuffle branch
       
       // Check if final round is complete
       if (gameState.gamePhase === 'finalRound') {
@@ -409,24 +468,27 @@ const BlitzGame = () => {
             description: "Deck is empty. Reshuffling discard pile..."
           });
           
-          // Keep the top discard card, reshuffle the rest
+          // Keep the top discard card, reshuffle the rest into the deck
           const topDiscard = gameState.discardPile[gameState.discardPile.length - 1];
           const cardsToReshuffle = gameState.discardPile.slice(0, -1);
           
-          // Create a new deck with the API
+          // Shuffle the cards to reshuffle randomly
+          const shuffledCards = [...cardsToReshuffle].sort(() => Math.random() - 0.5);
+          
+          // Create a new deck with the shuffled cards
           const newDeckResponse = await deckApi.createNewDeck();
           const newDeckId = newDeckResponse.deck_id;
           
-          // Draw a card from the new deck to simulate reshuffling
+          // Draw from new deck (simulating the reshuffled cards)
           const newDrawResponse = await deckApi.drawCards(newDeckId, 1);
           const drawnCard = newDrawResponse.cards[0];
           
-          // Update game state with new deck and reset discard pile
+          // Update game state - deck is now the new deck, discard pile has only top card
           setGameState(prev => ({
             ...prev,
             deckId: newDeckId,
             discardPile: [topDiscard],
-            message: "Deck reshuffled!"
+            message: "Deck reshuffled! Game continues..."
           }));
           
           setDeckRemaining(newDrawResponse.remaining);
@@ -441,11 +503,31 @@ const BlitzGame = () => {
           setTurnPhase('discard');
           return;
         } else {
+          // If only one card in discard pile, create new deck and continue
           toast({
-            title: "No Cards Available",
-            description: "Cannot continue - no cards left to draw.",
-            variant: "destructive"
+            title: "Reshuffling Deck", 
+            description: "Creating fresh deck to continue game..."
           });
+          
+          const newDeckResponse = await deckApi.createNewDeck();
+          const newDeckId = newDeckResponse.deck_id;
+          const newDrawResponse = await deckApi.drawCards(newDeckId, 1);
+          
+          setGameState(prev => ({
+            ...prev,
+            deckId: newDeckId,
+            message: "Fresh deck created! Game continues..."
+          }));
+          
+          setDeckRemaining(newDrawResponse.remaining);
+          
+          const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+          setPendingDrawCard(newDrawResponse.cards[0]);
+          setGameState(prev => ({
+            ...prev,
+            message: `${currentPlayer.name === userName ? `${userName}, you drew a card. Select a card to discard.` : `${currentPlayer.name} drew a card. Select a card to discard.`}`
+          }));
+          setTurnPhase('discard');
           return;
         }
       }
