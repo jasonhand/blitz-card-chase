@@ -462,7 +462,9 @@ const BlitzGame = () => {
       
       // If deck is empty, reshuffle discard pile
       if (!drawResponse.cards || drawResponse.cards.length === 0 || drawResponse.remaining === 0) {
+        console.log("DECK EMPTY - Starting reshuffle process...");
         if (gameState.discardPile.length > 1) {
+          console.log("Discard pile has cards, reshuffling...");
           toast({
             title: "Reshuffling Deck",
             description: "Deck is empty. Reshuffling discard pile..."
@@ -476,14 +478,19 @@ const BlitzGame = () => {
           const shuffledCards = [...cardsToReshuffle].sort(() => Math.random() - 0.5);
           
           // Create a new deck with the shuffled cards
+          console.log("Creating new deck...");
           const newDeckResponse = await deckApi.createNewDeck();
           const newDeckId = newDeckResponse.deck_id;
+          console.log("New deck created:", newDeckId);
           
           // Draw from new deck (simulating the reshuffled cards)
+          console.log("Drawing from new deck...");
           const newDrawResponse = await deckApi.drawCards(newDeckId, 1);
           const drawnCard = newDrawResponse.cards[0];
+          console.log("Card drawn from new deck:", drawnCard);
           
           // Update game state - deck is now the new deck, discard pile has only top card
+          console.log("Updating game state with new deck...");
           setGameState(prev => ({
             ...prev,
             deckId: newDeckId,
@@ -492,6 +499,7 @@ const BlitzGame = () => {
           }));
           
           setDeckRemaining(newDrawResponse.remaining);
+          console.log("Deck reshuffle complete, continuing turn...");
           
           // Continue with the drawn card
           const currentPlayer = gameState.players[gameState.currentPlayerIndex];
@@ -504,6 +512,7 @@ const BlitzGame = () => {
           return;
         } else {
           // If only one card in discard pile, create new deck and continue
+          console.log("Creating fresh deck (only one discard card)...");
           toast({
             title: "Reshuffling Deck", 
             description: "Creating fresh deck to continue game..."
@@ -512,6 +521,7 @@ const BlitzGame = () => {
           const newDeckResponse = await deckApi.createNewDeck();
           const newDeckId = newDeckResponse.deck_id;
           const newDrawResponse = await deckApi.drawCards(newDeckId, 1);
+          console.log("Fresh deck created and card drawn");
           
           setGameState(prev => ({
             ...prev,
@@ -520,6 +530,7 @@ const BlitzGame = () => {
           }));
           
           setDeckRemaining(newDrawResponse.remaining);
+          console.log("Fresh deck setup complete");
           
           const currentPlayer = gameState.players[gameState.currentPlayerIndex];
           setPendingDrawCard(newDrawResponse.cards[0]);
