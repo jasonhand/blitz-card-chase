@@ -594,6 +594,8 @@ const BlitzGame = () => {
       // User must select either a hand card (0,1,2) or the pending card (-1)
       if (selectedCardIndex === null) return;
       const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+      console.log(`User hand size before discard: ${currentPlayer.cards.length}`);
+      
       let cardToDiscard;
       let newHand;
       if (selectedCardIndex === -1) {
@@ -606,6 +608,18 @@ const BlitzGame = () => {
         newHand = [...currentPlayer.cards];
         newHand[selectedCardIndex] = pendingDrawCard;
       }
+      
+      // Verify hand size is always 3
+      if (newHand.length !== 3) {
+        console.error(`Hand size error: newHand has ${newHand.length} cards, should be 3`);
+        console.log(`Current hand:`, currentPlayer.cards);
+        console.log(`Pending draw card:`, pendingDrawCard);
+        console.log(`Selected index:`, selectedCardIndex);
+        return;
+      }
+      
+      console.log(`User hand size after discard: ${newHand.length}`);
+      
       const updatedPlayer = calculatePlayerScores({
         ...currentPlayer,
         cards: newHand
@@ -649,51 +663,15 @@ const BlitzGame = () => {
       setTurnPhase('decision');
       return;
     }
-    // If no pendingDrawCard, fallback to old logic (should not happen in normal play)
-    if (selectedCardIndex === null) return;
-    const currentPlayer = gameState.players[gameState.currentPlayerIndex];
-    const cardToDiscard = currentPlayer.cards[selectedCardIndex];
-    const remainingCards = currentPlayer.cards.filter((_, index) => index !== selectedCardIndex);
-    const updatedPlayer = calculatePlayerScores({
-      ...currentPlayer,
-      cards: remainingCards
+    
+    // CRITICAL FIX: Remove the old fallback logic that reduces hand size
+    // This should never happen in normal play, but if it does, just log an error
+    console.error("handleDiscard called without pendingDrawCard - this should not happen!");
+    toast({
+      title: "Error",
+      description: "Invalid discard state. Please try drawing a card first.",
+      variant: "destructive"
     });
-    setGameState(prev => ({
-      ...prev,
-      players: prev.players.map((player, index) => 
-        index === prev.currentPlayerIndex ? updatedPlayer : player
-      ),
-      discardPile: [...prev.discardPile, cardToDiscard],
-      discardLog: [
-        { playerName: currentPlayer.name, card: cardToDiscard, turn: prev.roundNumber },
-        ...prev.discardLog
-      ]
-    }));
-    setSelectedCardIndex(null);
-    
-    // Check if final round is complete
-    if (gameState.gamePhase === 'finalRound') {
-      const newTurnsRemaining = gameState.finalRoundTurnsRemaining - 1;
-      
-      if (newTurnsRemaining <= 0) {
-        toast({
-          title: "Showdown!",
-          description: "Let's see your hand."
-        });
-        console.log("Final round complete (3 turns taken), calculating scores...");
-        calculateRoundResults();
-        return;
-      } else {
-        setGameState(prev => ({
-          ...prev,
-          finalRoundTurnsRemaining: newTurnsRemaining
-        }));
-      }
-    }
-    
-    // Move to next player
-    moveToNextPlayer();
-    setTurnPhase('decision');
   };
 
   const processPlayerElimination = (gameState: GameState): GameState => {

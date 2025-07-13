@@ -220,7 +220,7 @@ const GameLayout = ({
               <div className="mt-4">
                 <button
                   onClick={onKnock}
-                  className="bg-transparent hover:bg-yellow-400/20 text-yellow-400 hover:text-yellow-300 font-bold px-6 py-3 rounded-xl shadow-lg text-lg flex items-center gap-2 border-2 border-yellow-400/50 hover:border-yellow-400 transition-all duration-200"
+                  className="bg-transparent hover:bg-yellow-400/20 text-yellow-400 hover:text-yellow-300 font-bold px-6 py-3 text-lg flex items-center gap-2 transition-all duration-200"
                   data-dd-action-name="Knock Button"
                 >
                   <span className="text-xl">✊</span>
