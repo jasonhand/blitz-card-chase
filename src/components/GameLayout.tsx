@@ -245,6 +245,7 @@ const GameLayout = ({
                 selectedCardIndex={selectedCardIndex}
                 canSelectCards={canSelectCards}
                 cardSize="normal"
+                isDiscardPhase={turnPhase === 'discard'}
                 onDiscardCard={turnPhase === 'discard' && isUserTurn && !isKnocker ? handleDiscardCard : undefined}
               />
             </div>

@@ -67,7 +67,7 @@ const PlayerZone = ({
               </div>
             ))}
           </div>
-        ) : !isUser && (
+        ) : !isUser && !player.isEliminated && (
           <div className="flex gap-1">
             {/* Show card backs for other players */}
             {Array.from({ length: player.cards.length }).map((_, index) => (
@@ -75,6 +75,13 @@ const PlayerZone = ({
                 <div className="text-2xl">🐱</div>
               </div>
             ))}
+          </div>
+        )}
+
+        {player.isEliminated && (
+          <div className="text-center py-4">
+            <p className="text-red-400 font-bold">ELIMINATED</p>
+            <p className="text-xs text-gray-500">Out of coins</p>
           </div>
         )}
 

@@ -10,6 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { User as UserIcon } from "lucide-react";
+import PlayerEliminationModal from "./PlayerEliminationModal";
+import WinnerModal from "./WinnerModal";
 
 const BlitzGame = () => {
   const { toast } = useToast();
@@ -36,6 +38,9 @@ const BlitzGame = () => {
   const [deckRemaining, setDeckRemaining] = useState(52);
   const [turnPhase, setTurnPhase] = useState<'decision' | 'draw' | 'discard'>('decision');
   const [pendingDrawCard, setPendingDrawCard] = useState<Card | null>(null);
+  const [showEliminationModal, setShowEliminationModal] = useState(false);
+  const [eliminatedPlayer, setEliminatedPlayer] = useState<{ name: string; image: string } | null>(null);
+  const [showWinnerModal, setShowWinnerModal] = useState(false);
 
   // On mount, check for saved name
   useEffect(() => {
@@ -694,11 +699,18 @@ const BlitzGame = () => {
   const processPlayerElimination = (gameState: GameState): GameState => {
     const updatedPlayers = gameState.players.map(player => {
       if (player.coins <= 0 && !player.isEliminated) {
-        toast({
-          title: "Player Eliminated",
-          description: `${player.name} is out of the game!`,
-          variant: "destructive"
-        });
+        // Show elimination modal for AI players
+        if (player.name !== userName) {
+          const playerImage = player.name === "Bill" ? "/Bill_images/Bill_pixel.png" : "/Bill_images/Peggy.png";
+          setEliminatedPlayer({ name: player.name, image: playerImage });
+          setShowEliminationModal(true);
+        } else {
+          toast({
+            title: "You're Eliminated!",
+            description: "You've run out of coins. Better luck next time!",
+            variant: "destructive"
+          });
+        }
       }
       return {
         ...player,
@@ -709,6 +721,7 @@ const BlitzGame = () => {
     const activePlayers = updatedPlayers.filter(p => !p.isEliminated);
     
     if (activePlayers.length === 1) {
+      setShowWinnerModal(true);
       return {
         ...gameState,
         players: updatedPlayers,
@@ -999,6 +1012,25 @@ const BlitzGame = () => {
           pendingDrawCard={pendingDrawCard}
         />
       </div>
+
+      {/* Player Elimination Modal */}
+      <PlayerEliminationModal
+        isOpen={showEliminationModal}
+        onClose={() => setShowEliminationModal(false)}
+        playerName={eliminatedPlayer?.name || ""}
+        playerImage={eliminatedPlayer?.image || ""}
+      />
+
+      {/* Winner Modal */}
+      <WinnerModal
+        isOpen={showWinnerModal}
+        onClose={() => setShowWinnerModal(false)}
+        onPlayAgain={() => {
+          setShowWinnerModal(false);
+          setShowNameInput(true);
+        }}
+        winnerName={gameState.winner?.name || ""}
+      />
     </>
   );
 };
