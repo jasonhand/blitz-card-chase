@@ -807,7 +807,7 @@ const BlitzGame = () => {
 
   const processPlayerElimination = (gameState: GameState): GameState => {
     const updatedPlayers = gameState.players.map(player => {
-      if (player.coins <= 0 && !player.isEliminated) {
+      if (player.coins === 0 && !player.isEliminated) {  // Only exactly 0 coins
         // Show elimination modal for AI players
         if (player.name !== userName) {
           let playerImage = "/Bill_images/Bill_pixel.png"; // default
@@ -1020,7 +1020,7 @@ const BlitzGame = () => {
       // Store deep copy snapshot of players for hand reveal to prevent changes
       setHandRevealPlayers(updatedPlayers.map(player => ({
         ...player,
-        cards: [...player.cards],
+        cards: player.cards.map(card => ({ ...card })), // Deep copy cards too
         scores: { ...player.scores }
       })));
       setTimeout(() => {
