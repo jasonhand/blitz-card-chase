@@ -927,10 +927,13 @@ const BlitzGame = () => {
     console.log("Players before calculation:", gameState.players.map(p => `${p.name}: ${p.coins} coins`));
     
     const knocker = gameState.players[gameState.knocker!];
+    console.log(`Knocker: ${knocker.name} with score ${knocker.bestScore}`);
     const otherPlayers = gameState.players.filter((_, index) => index !== gameState.knocker);
+    console.log(`Other players: ${otherPlayers.map(p => `${p.name}(${p.bestScore})`).join(', ')}`);
     const knockerScore = knocker.bestScore;
     const otherScores = otherPlayers.map(p => p.bestScore);
     const lowestOtherScore = Math.min(...otherScores);
+    console.log(`Knocker score: ${knockerScore}, lowest other score: ${lowestOtherScore}`);
     let updatedPlayers = [...gameState.players];
     let resultMessage = "";
     if (knockerScore > lowestOtherScore) {
@@ -943,10 +946,21 @@ const BlitzGame = () => {
         if (player.id === lowestScorer.id) {
           const newCoins = Math.max(0, player.coins - 1);
           console.log(`Lowest scorer ${player.name} coins after deduction: ${newCoins}`);
+          // CRITICAL: Prevent user from losing more than 1 coin at a time
+          if (player.name === userName && player.coins - newCoins > 1) {
+            console.error(`ERROR: User ${userName} would lose ${player.coins - newCoins} coins, limiting to 1`);
+            return { ...player, coins: Math.max(0, player.coins - 1) };
+          }
           return { ...player, coins: newCoins };
         }
         if (player.id === knocker.id) {
-          return { ...player, coins: player.coins + 1 };
+          const newCoins = player.coins + 1;
+          // CRITICAL: Prevent user from gaining more than 1 coin from successful knock
+          if (player.name === userName && newCoins - player.coins > 1) {
+            console.error(`ERROR: User ${userName} would gain ${newCoins - player.coins} coins, limiting to 1`);
+            return { ...player, coins: player.coins + 1 };
+          }
+          return { ...player, coins: newCoins };
         }
         return player;
       });
@@ -958,10 +972,22 @@ const BlitzGame = () => {
       
       updatedPlayers = updatedPlayers.map(player => {
         if (player.id === knocker.id) {
-          return { ...player, coins: Math.max(0, player.coins - 2) };
+          const newCoins = Math.max(0, player.coins - 2);
+          // CRITICAL: Prevent user from losing more than 2 coins from failed knock
+          if (player.name === userName && player.coins - newCoins > 2) {
+            console.error(`ERROR: User ${userName} would lose ${player.coins - newCoins} coins from failed knock, limiting to 2`);
+            return { ...player, coins: Math.max(0, player.coins - 2) };
+          }
+          return { ...player, coins: newCoins };
         }
         if (player.id === highestScorer.id) {
-          return { ...player, coins: player.coins + 2 };
+          const newCoins = player.coins + 2;
+          // CRITICAL: Prevent user from gaining more than 2 coins from failed opponent knock
+          if (player.name === userName && newCoins - player.coins > 2) {
+            console.error(`ERROR: User ${userName} would gain ${newCoins - player.coins} coins, limiting to 2`);
+            return { ...player, coins: player.coins + 2 };
+          }
+          return { ...player, coins: newCoins };
         }
         return player;
       });
