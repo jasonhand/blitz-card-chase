@@ -914,10 +914,10 @@ const BlitzGame = () => {
     });
   };
 
-  const calculateRoundResults = () => {
-    // Prevent multiple calls
-    if (isCalculatingResults) {
-      console.log("calculateRoundResults already in progress, skipping...");
+  const calculateRoundResults = useCallback(() => {
+    // Prevent multiple calls with more robust checking
+    if (isCalculatingResults || gameState.gamePhase === 'roundEnd' || gameState.gamePhase === 'gameEnd') {
+      console.log("calculateRoundResults already in progress or round ended, skipping...");
       return;
     }
     setIsCalculatingResults(true);
@@ -1030,7 +1030,7 @@ const BlitzGame = () => {
         setIsCalculatingResults(false);
       }, 1500);
     }
-  };
+  }, [isCalculatingResults, gameState.gamePhase, gameState.knocker, gameState.players, userName, setGameState, setShowGameOverModal, setEliminatedPlayer, setShowEliminationModal, setHandRevealPlayers, setShowHandReveal]);
 
   const handleHandRevealContinue = useCallback(() => {
     setShowHandReveal(false);
