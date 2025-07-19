@@ -46,6 +46,7 @@ const BlitzGame = () => {
   const [showGameOverModal, setShowGameOverModal] = useState(false);
   const [showHandReveal, setShowHandReveal] = useState(false);
   const [isCalculatingResults, setIsCalculatingResults] = useState(false);
+  const [handRevealPlayers, setHandRevealPlayers] = useState<Player[]>([]);
 
   // On mount, check for saved name
   useEffect(() => {
@@ -952,11 +953,27 @@ const BlitzGame = () => {
       };
       resultMessage = `${knocker.name}'s knock failed! Loses 2 coins (transferred to ${highestScorer.name}).`;
     }
-    // Check for eliminations
-    updatedPlayers = updatedPlayers.map(player => ({
+    // Check for eliminations - but be more careful about when to actually eliminate
+    const playersWithEliminations = updatedPlayers.map(player => ({
       ...player,
       isEliminated: player.coins === 0
     }));
+    
+    // Only mark AI players as eliminated if they have 0 coins
+    // Check if any AI players should show elimination modal
+    playersWithEliminations.forEach(player => {
+      if (player.coins === 0 && !player.isEliminated && player.name !== userName) {
+        let playerImage = "/Bill_images/Bill_pixel.png"; // default
+        if (player.name === "Bill") playerImage = "/Bill_images/Bill_pixel.png";
+        else if (player.name === "Peggy") playerImage = "/Bill_images/Peggy.png";
+        else if (player.name === "Mom-Mom") playerImage = "/lovable-uploads/60a0284f-f13d-48bf-aa43-b3d1eed03a2b.png";
+        setEliminatedPlayer({ name: player.name, image: playerImage });
+        setShowEliminationModal(true);
+      }
+    });
+    
+    // Use the updated players with elimination flags
+    updatedPlayers = playersWithEliminations;
     
     // Check if user is eliminated first (only when coins reach exactly 0)
     const userPlayer = updatedPlayers.find(p => p.name === userName);
@@ -1172,7 +1189,7 @@ const BlitzGame = () => {
 
       {showHandReveal && (
         <HandRevealModal
-          players={gameState.players}
+          players={handRevealPlayers}
           userName={userName}
           onContinue={handleHandRevealContinue}
         />
