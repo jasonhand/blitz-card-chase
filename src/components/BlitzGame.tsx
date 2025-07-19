@@ -218,11 +218,6 @@ const BlitzGame = () => {
         setDeckRemaining(drawResponse.remaining);
       }
 
-      // Check for BLITZ (31) immediately after drawing
-      if (checkForBlitz(updatedPlayer)) {
-        return;
-      }
-
       // AI immediately discards
       const cardToDiscard = updatedPlayer.cards[discardIndex];
       const remainingCards = updatedPlayer.cards.filter((_, index) => index !== discardIndex);
@@ -231,6 +226,11 @@ const BlitzGame = () => {
         ...updatedPlayer,
         cards: remainingCards
       });
+
+      // Check for BLITZ (31) after final hand (3 cards)
+      if (checkForBlitz(finalPlayer)) {
+        return;
+      }
 
       setGameState(prev => ({
         ...prev,
@@ -288,11 +288,6 @@ const BlitzGame = () => {
       cards: [...currentPlayer.cards, cardToTake]
     });
 
-    // Check for BLITZ (31) immediately after drawing
-    if (checkForBlitz(updatedPlayer)) {
-      return;
-    }
-
     // AI immediately discards
     const cardToDiscard = updatedPlayer.cards[discardIndex];
     const remainingCards = updatedPlayer.cards.filter((_, index) => index !== discardIndex);
@@ -301,6 +296,11 @@ const BlitzGame = () => {
       ...updatedPlayer,
       cards: remainingCards
     });
+
+    // Check for BLITZ (31) after final hand (3 cards)
+    if (checkForBlitz(finalPlayer)) {
+      return;
+    }
 
     setGameState(prev => ({
       ...prev,
@@ -505,10 +505,13 @@ const BlitzGame = () => {
         }));
       } else {
         // Continue with new round
-        toast({
-          title: "BLITZ!",
-          description: `${player.name} hit 31! All other players lose 1 coin.`
-        });
+        // Only show toast if hand reveal modal is not displayed
+        if (!showHandReveal) {
+          toast({
+            title: "BLITZ!",
+            description: `${player.name} hit 31! All other players lose 1 coin.`
+          });
+        }
         setTimeout(() => {
           startNewRound(finalPlayers);
         }, 2000);
@@ -520,6 +523,7 @@ const BlitzGame = () => {
 
   const handleKnock = () => {
     console.log(`Player ${gameState.currentPlayerIndex} knocked!`);
+    
     toast({
       title: "Knock!",
       description: `${gameState.players[gameState.currentPlayerIndex].name} has knocked. Everyone else gets one more draw to improve their hand.`
@@ -962,10 +966,13 @@ const BlitzGame = () => {
         ...prev,
         players: updatedPlayers
       }));
-      toast({
-        title: "Round Complete",
-        description: resultMessage
-      });
+      // Only show toast if hand reveal modal is not displayed
+      if (!showHandReveal) {
+        toast({
+          title: "Round Complete",
+          description: resultMessage
+        });
+      }
       setTimeout(() => {
         setShowHandReveal(true);
         setIsCalculatingResults(false);
