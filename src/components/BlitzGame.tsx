@@ -254,7 +254,9 @@ const BlitzGame = () => {
         
         if (newTurnsRemaining <= 0) {
           console.log("Final round complete (all players got final turn), calculating scores...");
-          calculateRoundResults();
+          if (!isCalculatingResults) {
+            calculateRoundResults();
+          }
           return;
         } else {
           setGameState(prev => ({
@@ -324,7 +326,9 @@ const BlitzGame = () => {
           description: "Let's see your hand."
         });
         console.log("Final round complete (all players got final turn), calculating scores...");
-        calculateRoundResults();
+        if (!isCalculatingResults) {
+          calculateRoundResults();
+        }
         return;
       } else {
         setGameState(prev => ({
@@ -750,8 +754,10 @@ const BlitzGame = () => {
             title: "Showdown!",
             description: "Let's see your hand."
           });
-          console.log("Final round complete (all players got final turn), calculating scores...");
+        console.log("Final round complete (all players got final turn), calculating scores...");
+        if (!isCalculatingResults) {
           calculateRoundResults();
+        }
           return;
         } else {
           setGameState(prev => ({
@@ -946,6 +952,7 @@ const BlitzGame = () => {
         winner: remainingPlayers[0],
         message: `${remainingPlayers[0].name} wins the game!`
       }));
+      setIsCalculatingResults(false);
     } else {
       // Show hand reveal before starting new round
       setGameState(prev => ({
