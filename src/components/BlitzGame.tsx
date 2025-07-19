@@ -856,6 +856,15 @@ const BlitzGame = () => {
 
       const activePlayers = updatedState.players.filter(p => !p.isEliminated);
       if (activePlayers.length <= 1) {
+        // Game should end - set winner and game phase
+        if (activePlayers.length === 1) {
+          return {
+            ...updatedState,
+            gamePhase: 'gameEnd',
+            winner: activePlayers[0],
+            message: `${activePlayers[0].name} wins the game!`
+          };
+        }
         return updatedState;
       }
       
