@@ -371,6 +371,28 @@ const BlitzGame = () => {
     try {
       console.log("Dealing initial cards...");
       
+      // Check if we have enough cards remaining
+      if (deckRemaining < 12) {
+        console.log("Not enough cards remaining, creating fresh deck...");
+        const newDeckResponse = await deckApi.createNewDeck();
+        const newDeckId = newDeckResponse.deck_id;
+        setGameState(prev => ({
+          ...prev,
+          deckId: newDeckId
+        }));
+        setDeckRemaining(52);
+        
+        // Use the new deck ID for drawing
+        const drawResponse = await deckApi.drawCards(newDeckId, 12);
+        console.log("Drew cards from fresh deck:", drawResponse.cards.length);
+        
+        if (drawResponse.cards.length !== 12) {
+          throw new Error(`Expected 12 cards, got ${drawResponse.cards.length}`);
+        }
+        
+        return await processCardDeal(drawResponse, players);
+      }
+      
       // Draw 12 cards (3 per player) - ensure exactly 3 cards per player
       const drawResponse = await deckApi.drawCards(deckId, 12);
       console.log("Drew cards:", drawResponse.cards.length);
@@ -380,33 +402,7 @@ const BlitzGame = () => {
         throw new Error(`Expected 12 cards, got ${drawResponse.cards.length}`);
       }
       
-      const updatedPlayers = players.map((player, index) => {
-        const playerCards = drawResponse.cards.slice(index * 3, (index + 1) * 3);
-        // Verify each player gets exactly 3 cards
-        if (playerCards.length !== 3) {
-          throw new Error(`Player ${index} got ${playerCards.length} cards, expected 3`);
-        }
-        return calculatePlayerScores({ ...player, cards: playerCards });
-      });
-
-      // Verify all players have exactly 3 cards
-      updatedPlayers.forEach((player, index) => {
-        if (player.cards.length !== 3) {
-          console.error(`Player ${index} (${player.name}) has ${player.cards.length} cards, should have 3`);
-        }
-      });
-
-      setGameState(prev => ({
-        ...prev,
-        players: updatedPlayers,
-        gamePhase: 'playing',
-        message: `${updatedPlayers[0].name === userName ? `${userName}, you're up! Draw or knock!` : updatedPlayers[0].name + "'s turn"}`
-      }));
-      
-      setDeckRemaining(drawResponse.remaining);
-      setTurnPhase('decision');
-      
-      console.log("Game ready to start!");
+      return await processCardDeal(drawResponse, players);
       
     } catch (error) {
       console.error("Error dealing cards:", error);
@@ -416,6 +412,36 @@ const BlitzGame = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const processCardDeal = async (drawResponse: any, players: Player[]) => {
+    const updatedPlayers = players.map((player, index) => {
+      const playerCards = drawResponse.cards.slice(index * 3, (index + 1) * 3);
+      // Verify each player gets exactly 3 cards
+      if (playerCards.length !== 3) {
+        throw new Error(`Player ${index} got ${playerCards.length} cards, expected 3`);
+      }
+      return calculatePlayerScores({ ...player, cards: playerCards });
+    });
+
+    // Verify all players have exactly 3 cards
+    updatedPlayers.forEach((player, index) => {
+      if (player.cards.length !== 3) {
+        console.error(`Player ${index} (${player.name}) has ${player.cards.length} cards, should have 3`);
+      }
+    });
+
+    setGameState(prev => ({
+      ...prev,
+      players: updatedPlayers,
+      gamePhase: 'playing',
+      message: `${updatedPlayers[0].name === userName ? `${userName}, you're up! Draw or knock!` : updatedPlayers[0].name + "'s turn"}`
+    }));
+    
+    setDeckRemaining(drawResponse.remaining);
+    setTurnPhase('decision');
+    
+    console.log("Game ready to start!");
   };
 
   const checkForBlitz = (player: Player) => {

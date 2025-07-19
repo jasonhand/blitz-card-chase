@@ -100,7 +100,7 @@ const GameLayout = ({
         </div>
 
         {/* Peggy - Top Left */}
-        <div className="absolute top-16 md:top-20 left-4 z-20 flex items-center gap-4">
+        <div className="absolute top-8 left-4 z-20 flex items-center gap-4">
           {!otherPlayers[1]?.isEliminated ? (
             <img
               src="/Bill_images/Peggy.png"
@@ -128,7 +128,7 @@ const GameLayout = ({
         </div>
 
         {/* Bill - Left Side Middle */}
-        <div className="absolute top-1/2 left-4 transform -translate-y-8 md:-translate-y-4 z-20 flex items-center gap-4">
+        <div className="absolute top-1/2 left-4 transform -translate-y-1/2 z-20 flex items-center gap-4">
           {!otherPlayers[0]?.isEliminated ? (
             <img
               src="/Bill_images/Bill_pixel.png"
@@ -157,7 +157,7 @@ const GameLayout = ({
         </div>
 
         {/* Mom-Mom - Left Side Bottom */}
-        <div className="absolute bottom-16 md:bottom-20 left-4 z-20 flex items-center gap-4">
+        <div className="absolute bottom-8 left-4 z-20 flex items-center gap-4">
           {!otherPlayers[2]?.isEliminated ? (
             <img
               src="/Bill_images/Peggy.png"
