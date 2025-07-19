@@ -367,13 +367,29 @@ const BlitzGame = () => {
     try {
       console.log("Dealing initial cards...");
       
-      // Draw 12 cards (3 per player)
+      // Draw 12 cards (3 per player) - ensure exactly 3 cards per player
       const drawResponse = await deckApi.drawCards(deckId, 12);
       console.log("Drew cards:", drawResponse.cards.length);
       
+      // Ensure we have exactly 12 cards
+      if (drawResponse.cards.length !== 12) {
+        throw new Error(`Expected 12 cards, got ${drawResponse.cards.length}`);
+      }
+      
       const updatedPlayers = players.map((player, index) => {
         const playerCards = drawResponse.cards.slice(index * 3, (index + 1) * 3);
+        // Verify each player gets exactly 3 cards
+        if (playerCards.length !== 3) {
+          throw new Error(`Player ${index} got ${playerCards.length} cards, expected 3`);
+        }
         return calculatePlayerScores({ ...player, cards: playerCards });
+      });
+
+      // Verify all players have exactly 3 cards
+      updatedPlayers.forEach((player, index) => {
+        if (player.cards.length !== 3) {
+          console.error(`Player ${index} (${player.name}) has ${player.cards.length} cards, should have 3`);
+        }
       });
 
       setGameState(prev => ({
@@ -462,6 +478,20 @@ const BlitzGame = () => {
 
   const handleDrawFromDeck = async () => {
     if (!gameState.deckId) return;
+    
+    const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+    
+    // Prevent drawing if player doesn't have exactly 3 cards
+    if (currentPlayer.cards.length !== 3) {
+      console.error(`Player ${currentPlayer.name} has ${currentPlayer.cards.length} cards, cannot draw. Should have exactly 3.`);
+      toast({
+        title: "Invalid Hand Size",
+        description: "Cannot draw card - invalid hand size. Please refresh the game.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     try {
       console.log("Drawing from deck...");
       const drawResponse = await deckApi.drawCards(gameState.deckId, 1);
@@ -575,9 +605,21 @@ const BlitzGame = () => {
   const handleDrawFromDiscard = () => {
     if (gameState.discardPile.length === 0) return;
     
+    const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+    
+    // Prevent drawing if player doesn't have exactly 3 cards
+    if (currentPlayer.cards.length !== 3) {
+      console.error(`Player ${currentPlayer.name} has ${currentPlayer.cards.length} cards, cannot draw. Should have exactly 3.`);
+      toast({
+        title: "Invalid Hand Size",
+        description: "Cannot draw card - invalid hand size. Please refresh the game.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     console.log("Drawing from discard pile...");
     const cardToTake = gameState.discardPile[gameState.discardPile.length - 1];
-    const currentPlayer = gameState.players[gameState.currentPlayerIndex];
     
     // Use pending card system for consistency
     setPendingDrawCard(cardToTake);

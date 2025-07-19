@@ -128,7 +128,7 @@ const GameLayout = ({
         </div>
 
         {/* Bill - Left Side (moved higher for iPad visibility) */}
-        <div className="absolute top-1/2 left-4 transform -translate-y-1/2 z-20 flex items-center gap-4">
+        <div className="absolute top-1/3 left-4 transform -translate-y-1/2 z-20 flex items-center gap-4">
           {!otherPlayers[0]?.isEliminated ? (
             <img
               src="/Bill_images/Bill_pixel.png"
@@ -156,8 +156,19 @@ const GameLayout = ({
           </div>
         </div>
 
-        {/* Mom-Mom - Top Right */}
-        <div className="absolute top-16 right-4 z-20 flex items-center gap-4">
+        {/* Mom-Mom - Left Side, Below Bill */}
+        <div className="absolute top-2/3 left-4 transform -translate-y-1/2 z-20 flex items-center gap-4">
+          {!otherPlayers[2]?.isEliminated ? (
+            <img
+              src="/Bill_images/Peggy.png"
+              alt="Mom-Mom"
+              className="w-32 h-32 md:w-40 md:h-40 object-contain"
+            />
+          ) : (
+            <div className="w-32 h-32 md:w-40 md:h-40 flex items-center justify-center bg-red-900/50 rounded-lg">
+              <span className="text-red-400 font-bold text-lg">OUT</span>
+            </div>
+          )}
           <div className="flex flex-col items-center">
             <h3 className={`font-extrabold text-xl md:text-2xl ${
               otherPlayers[2]?.id === currentPlayerIndex ? 'text-blue-400' : 
@@ -171,17 +182,6 @@ const GameLayout = ({
               <span className="text-yellow-400 font-bold text-lg">{otherPlayers[2]?.coins}</span>
             </div>
           </div>
-          {!otherPlayers[2]?.isEliminated ? (
-            <img
-              src="/Bill_images/Peggy.png"
-              alt="Mom-Mom"
-              className="w-32 h-32 md:w-40 md:h-40 object-contain"
-            />
-          ) : (
-            <div className="w-32 h-32 md:w-40 md:h-40 flex items-center justify-center bg-red-900/50 rounded-lg">
-              <span className="text-red-400 font-bold text-lg">OUT</span>
-            </div>
-          )}
         </div>
 
         {/* Center Table Area */}
