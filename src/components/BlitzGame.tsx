@@ -321,10 +321,13 @@ const BlitzGame = () => {
       const newTurnsRemaining = gameState.finalRoundTurnsRemaining - 1;
       
       if (newTurnsRemaining <= 0) {
-        toast({
-          title: "Showdown!",
-          description: "Let's see your hand."
-        });
+        // Only show toast if hand reveal modal is not displayed
+        if (!showHandReveal) {
+          toast({
+            title: "Showdown!",
+            description: "Let's see your hand."
+          });
+        }
         console.log("Final round complete (all players got final turn), calculating scores...");
         if (!isCalculatingResults) {
           calculateRoundResults();
@@ -754,10 +757,13 @@ const BlitzGame = () => {
         const newTurnsRemaining = gameState.finalRoundTurnsRemaining - 1;
         
         if (newTurnsRemaining <= 0) {
-          toast({
-            title: "Showdown!",
-            description: "Let's see your hand."
-          });
+          // Only show toast if hand reveal modal is not displayed
+          if (!showHandReveal) {
+            toast({
+              title: "Showdown!",
+              description: "Let's see your hand."
+            });
+          }
         console.log("Final round complete (all players got final turn), calculating scores...");
         if (!isCalculatingResults) {
           calculateRoundResults();
