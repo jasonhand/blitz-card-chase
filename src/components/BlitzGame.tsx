@@ -937,28 +937,35 @@ const BlitzGame = () => {
       // Knocker wins, lowest scorer loses 1 coin, knocker gains 1 coin
       const lowestScorer = otherPlayers.find(p => p.bestScore === lowestOtherScore)!;
       console.log(`Lowest scorer: ${lowestScorer.name} with score ${lowestScorer.bestScore}, coins before: ${lowestScorer.coins}`);
-      updatedPlayers[lowestScorer.id] = {
-        ...lowestScorer,
-        coins: Math.max(0, lowestScorer.coins - 1)
-      };
-      console.log(`Lowest scorer ${lowestScorer.name} coins after deduction: ${updatedPlayers[lowestScorer.id].coins}`);
-      updatedPlayers[knocker.id] = {
-        ...knocker,
-        coins: knocker.coins + 1
-      };
+      
+      // Update players by finding the correct array index, not using player.id as index
+      updatedPlayers = updatedPlayers.map(player => {
+        if (player.id === lowestScorer.id) {
+          const newCoins = Math.max(0, player.coins - 1);
+          console.log(`Lowest scorer ${player.name} coins after deduction: ${newCoins}`);
+          return { ...player, coins: newCoins };
+        }
+        if (player.id === knocker.id) {
+          return { ...player, coins: player.coins + 1 };
+        }
+        return player;
+      });
+      
       resultMessage = `${knocker.name} won! ${lowestScorer.name} loses 1 coin (transferred to ${knocker.name}).`;
     } else {
-      // Knocker loses 2 coins for unsuccessful knock, lowest scorer gains 2 coins
-      updatedPlayers[knocker.id] = {
-        ...knocker,
-        coins: Math.max(0, knocker.coins - 2)
-      };
-      // Optionally, give 2 coins to the player with the highest score (excluding knocker)
+      // Knocker loses 2 coins for unsuccessful knock, highest scorer gains 2 coins
       const highestScorer = otherPlayers.reduce((prev, curr) => (curr.bestScore > prev.bestScore ? curr : prev), otherPlayers[0]);
-      updatedPlayers[highestScorer.id] = {
-        ...highestScorer,
-        coins: highestScorer.coins + 2
-      };
+      
+      updatedPlayers = updatedPlayers.map(player => {
+        if (player.id === knocker.id) {
+          return { ...player, coins: Math.max(0, player.coins - 2) };
+        }
+        if (player.id === highestScorer.id) {
+          return { ...player, coins: player.coins + 2 };
+        }
+        return player;
+      });
+      
       resultMessage = `${knocker.name}'s knock failed! Loses 2 coins (transferred to ${highestScorer.name}).`;
     }
     
@@ -1044,12 +1051,13 @@ const BlitzGame = () => {
   }, [isCalculatingResults, gameState.gamePhase, gameState.knocker, gameState.players, userName, setGameState, setShowGameOverModal, setEliminatedPlayer, setShowEliminationModal, setHandRevealPlayers, setShowHandReveal]);
 
   const handleHandRevealContinue = useCallback(() => {
+    if (!showHandReveal) return; // Prevent multiple calls
     setShowHandReveal(false);
     const currentPlayers = gameState.players;
     setTimeout(() => {
       startNewRound(currentPlayers);
     }, 200);
-  }, [gameState.players]);
+  }, [showHandReveal, gameState.players]);
 
   const startNewRound = async (players: Player[]) => {
     try {
