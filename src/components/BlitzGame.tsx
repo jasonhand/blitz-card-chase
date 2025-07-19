@@ -916,10 +916,15 @@ const BlitzGame = () => {
 
   const calculateRoundResults = () => {
     // Prevent multiple calls
-    if (isCalculatingResults) return;
+    if (isCalculatingResults) {
+      console.log("calculateRoundResults already in progress, skipping...");
+      return;
+    }
     setIsCalculatingResults(true);
     
-    console.log("Calculating round results...");
+    console.log("=== CALCULATING ROUND RESULTS ===");
+    console.log("Players before calculation:", gameState.players.map(p => `${p.name}: ${p.coins} coins`));
+    
     const knocker = gameState.players[gameState.knocker!];
     const otherPlayers = gameState.players.filter((_, index) => index !== gameState.knocker);
     const knockerScore = knocker.bestScore;
@@ -935,7 +940,7 @@ const BlitzGame = () => {
         ...lowestScorer,
         coins: Math.max(0, lowestScorer.coins - 1)
       };
-      console.log(`Lowest scorer coins after: ${updatedPlayers[lowestScorer.id].coins}`);
+      console.log(`Lowest scorer ${lowestScorer.name} coins after deduction: ${updatedPlayers[lowestScorer.id].coins}`);
       updatedPlayers[knocker.id] = {
         ...knocker,
         coins: knocker.coins + 1
@@ -955,6 +960,9 @@ const BlitzGame = () => {
       };
       resultMessage = `${knocker.name}'s knock failed! Loses 2 coins (transferred to ${highestScorer.name}).`;
     }
+    
+    console.log("Players after coin changes:", updatedPlayers.map(p => `${p.name}: ${p.coins} coins`));
+    
     // Check for eliminations - but be more careful about when to actually eliminate
     const playersWithEliminations = updatedPlayers.map(player => ({
       ...player,
