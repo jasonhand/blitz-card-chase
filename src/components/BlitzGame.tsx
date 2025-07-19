@@ -829,16 +829,10 @@ const BlitzGame = () => {
 
     const activePlayers = updatedPlayers.filter(p => !p.isEliminated);
     
-    // Check if user is eliminated
+    // Check if user is eliminated - but DON'T end game here!
+    // Only calculateRoundResults should end the game for the user
     const userPlayer = updatedPlayers.find(p => p.name === userName);
-    if (userPlayer && userPlayer.isEliminated) {
-      return {
-        ...gameState,
-        players: updatedPlayers,
-        gamePhase: 'gameEnd',
-        message: `Game Over! You ran out of coins.`
-      };
-    }
+    // Removed premature game ending logic here
     
     if (activePlayers.length === 1) {
       setShowWinnerModal(true);
