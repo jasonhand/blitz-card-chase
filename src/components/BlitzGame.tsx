@@ -914,6 +914,20 @@ const BlitzGame = () => {
       ...player,
       isEliminated: player.coins === 0
     }));
+    
+    // Check if user is eliminated first
+    const userPlayer = updatedPlayers.find(p => p.name === userName);
+    if (userPlayer && userPlayer.isEliminated) {
+      setGameState(prev => ({
+        ...prev,
+        players: updatedPlayers,
+        gamePhase: 'gameEnd',
+        message: `Game Over! You ran out of coins.`
+      }));
+      setShowGameOverModal(true);
+      return;
+    }
+    
     const remainingPlayers = updatedPlayers.filter(p => !p.isEliminated);
     if (remainingPlayers.length === 1) {
       // Game over
