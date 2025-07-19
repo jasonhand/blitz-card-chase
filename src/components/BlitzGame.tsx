@@ -1038,13 +1038,14 @@ const BlitzGame = () => {
     try {
       console.log("Starting new round...");
       
-      // Reset game state for new round
+      // Reset game state for new round - but preserve coins and elimination status
       const resetPlayers = players.map(player => ({
         ...player,
         cards: [],
         scores: { hearts: 0, diamonds: 0, clubs: 0, spades: 0 },
         bestScore: 0,
         bestSuit: 'hearts'
+        // Keep coins and isEliminated from the passed players array
       }));
       
       setGameState(prev => ({
