@@ -1017,8 +1017,12 @@ const BlitzGame = () => {
           description: resultMessage
         });
       }
-      // Store snapshot of players for hand reveal
-      setHandRevealPlayers([...updatedPlayers]);
+      // Store deep copy snapshot of players for hand reveal to prevent changes
+      setHandRevealPlayers(updatedPlayers.map(player => ({
+        ...player,
+        cards: [...player.cards],
+        scores: { ...player.scores }
+      })));
       setTimeout(() => {
         setShowHandReveal(true);
         setIsCalculatingResults(false);
