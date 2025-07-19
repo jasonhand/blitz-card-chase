@@ -162,7 +162,7 @@ const GameLayout = ({
             <img
               src="/lovable-uploads/60a0284f-f13d-48bf-aa43-b3d1eed03a2b.png"
               alt="Mom-Mom"
-              className="w-28 h-28 md:w-36 md:h-36 lg:w-40 lg:h-40 object-contain"
+              className="w-24 h-24 md:w-32 md:h-32 lg:w-36 lg:h-36 object-contain"
             />
           ) : (
             <div className="w-28 h-28 md:w-36 md:h-36 lg:w-40 lg:h-40 flex items-center justify-center bg-red-900/50 rounded-lg">

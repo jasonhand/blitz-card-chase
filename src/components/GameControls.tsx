@@ -68,7 +68,7 @@ const GameControls = ({
       </div>
 
       {/* Turn Actions */}
-      {isCurrentPlayerTurn && gamePhase === 'playing' && (
+      {isCurrentPlayerTurn && (gamePhase === 'playing' || gamePhase === 'finalRound') && (
         <div className="space-y-4">
           {/* Knock or Continue Decision */}
           <div className="flex gap-4 justify-center">
