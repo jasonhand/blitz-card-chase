@@ -899,10 +899,12 @@ const BlitzGame = () => {
     if (knockerScore > lowestOtherScore) {
       // Knocker wins, lowest scorer loses 1 coin, knocker gains 1 coin
       const lowestScorer = otherPlayers.find(p => p.bestScore === lowestOtherScore)!;
+      console.log(`Lowest scorer: ${lowestScorer.name} with score ${lowestScorer.bestScore}, coins before: ${lowestScorer.coins}`);
       updatedPlayers[lowestScorer.id] = {
         ...lowestScorer,
         coins: Math.max(0, lowestScorer.coins - 1)
       };
+      console.log(`Lowest scorer coins after: ${updatedPlayers[lowestScorer.id].coins}`);
       updatedPlayers[knocker.id] = {
         ...knocker,
         coins: knocker.coins + 1
@@ -930,6 +932,7 @@ const BlitzGame = () => {
     
     // Check if user is eliminated first (only when coins reach exactly 0)
     const userPlayer = updatedPlayers.find(p => p.name === userName);
+    console.log(`User ${userName} coins after round: ${userPlayer?.coins}`);
     if (userPlayer && userPlayer.coins === 0) {
       setGameState(prev => ({
         ...prev,
