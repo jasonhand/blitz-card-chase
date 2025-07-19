@@ -917,9 +917,9 @@ const BlitzGame = () => {
       isEliminated: player.coins === 0
     }));
     
-    // Check if user is eliminated first
+    // Check if user is eliminated first (only when coins reach exactly 0)
     const userPlayer = updatedPlayers.find(p => p.name === userName);
-    if (userPlayer && userPlayer.isEliminated) {
+    if (userPlayer && userPlayer.coins === 0) {
       setGameState(prev => ({
         ...prev,
         players: updatedPlayers,
