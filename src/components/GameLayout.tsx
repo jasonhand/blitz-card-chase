@@ -100,86 +100,86 @@ const GameLayout = ({
         </div>
 
         {/* Peggy - Top Left */}
-        <div className="absolute top-16 left-4 z-20 flex items-center gap-4">
+        <div className="absolute top-8 left-4 z-20 flex items-center gap-4">
           {!otherPlayers[1]?.isEliminated ? (
             <img
               src="/Bill_images/Peggy.png"
               alt="Peggy"
-              className="w-32 h-32 md:w-40 md:h-40 object-contain"
+              className="w-28 h-28 md:w-36 md:h-36 lg:w-40 lg:h-40 object-contain"
             />
           ) : (
-            <div className="w-32 h-32 md:w-40 md:h-40 flex items-center justify-center bg-red-900/50 rounded-lg">
-              <span className="text-red-400 font-bold text-lg">OUT</span>
+            <div className="w-28 h-28 md:w-36 md:h-36 lg:w-40 lg:h-40 flex items-center justify-center bg-red-900/50 rounded-lg">
+              <span className="text-red-400 font-bold text-sm md:text-base lg:text-lg">OUT</span>
             </div>
           )}
           <div className="flex flex-col items-center">
-            <h3 className={`font-extrabold text-xl md:text-2xl ${
+            <h3 className={`font-extrabold text-lg md:text-xl lg:text-2xl ${
               otherPlayers[1]?.id === currentPlayerIndex ? 'text-blue-400' : 
               otherPlayers[1]?.isEliminated ? 'text-red-400' : 'text-yellow-100'
             }`}>
               Peggy
-              {otherPlayers[1]?.id === currentPlayerIndex && <span className="ml-2 text-sm">(Playing)</span>}
+              {otherPlayers[1]?.id === currentPlayerIndex && <span className="ml-2 text-xs md:text-sm">(Playing)</span>}
             </h3>
             <div className="flex items-center gap-2 mt-1">
-              <Coins className="w-5 h-5 text-yellow-400" />
-              <span className="text-yellow-400 font-bold text-lg">{otherPlayers[1]?.coins}</span>
+              <Coins className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" />
+              <span className="text-yellow-400 font-bold text-base md:text-lg">{otherPlayers[1]?.coins}</span>
             </div>
           </div>
         </div>
 
-        {/* Bill - Left Side (moved higher for iPad visibility) */}
-        <div className="absolute top-1/3 left-4 transform -translate-y-1/2 z-20 flex items-center gap-4">
+        {/* Bill - Left Side Middle */}
+        <div className="absolute top-1/2 left-4 transform -translate-y-1/2 z-20 flex items-center gap-4">
           {!otherPlayers[0]?.isEliminated ? (
             <img
               src="/Bill_images/Bill_pixel.png"
               alt="Bill"
-              className="w-32 h-32 md:w-40 md:h-40 object-contain"
+              className="w-28 h-28 md:w-36 md:h-36 lg:w-40 lg:h-40 object-contain"
               style={{ imageRendering: 'pixelated' }}
             />
           ) : (
-            <div className="w-32 h-32 md:w-40 md:h-40 flex items-center justify-center bg-red-900/50 rounded-lg">
-              <span className="text-red-400 font-bold text-lg">OUT</span>
+            <div className="w-28 h-28 md:w-36 md:h-36 lg:w-40 lg:h-40 flex items-center justify-center bg-red-900/50 rounded-lg">
+              <span className="text-red-400 font-bold text-sm md:text-base lg:text-lg">OUT</span>
             </div>
           )}
           <div className="flex flex-col items-center">
-            <h3 className={`font-extrabold text-xl md:text-2xl ${
+            <h3 className={`font-extrabold text-lg md:text-xl lg:text-2xl ${
               otherPlayers[0]?.id === currentPlayerIndex ? 'text-blue-400' : 
               otherPlayers[0]?.isEliminated ? 'text-red-400' : 'text-yellow-100'
             }`}>
               Bill
-              {otherPlayers[0]?.id === currentPlayerIndex && <span className="ml-2 text-sm">(Playing)</span>}
+              {otherPlayers[0]?.id === currentPlayerIndex && <span className="ml-2 text-xs md:text-sm">(Playing)</span>}
             </h3>
             <div className="flex items-center gap-2 mt-1">
-              <Coins className="w-5 h-5 text-yellow-400" />
-              <span className="text-yellow-400 font-bold text-lg">{otherPlayers[0]?.coins}</span>
+              <Coins className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" />
+              <span className="text-yellow-400 font-bold text-base md:text-lg">{otherPlayers[0]?.coins}</span>
             </div>
           </div>
         </div>
 
-        {/* Mom-Mom - Left Side, Below Bill */}
-        <div className="absolute top-2/3 left-4 transform -translate-y-1/2 z-20 flex items-center gap-4">
+        {/* Mom-Mom - Left Side Bottom */}
+        <div className="absolute bottom-8 left-4 z-20 flex items-center gap-4">
           {!otherPlayers[2]?.isEliminated ? (
             <img
               src="/Bill_images/Peggy.png"
               alt="Mom-Mom"
-              className="w-32 h-32 md:w-40 md:h-40 object-contain"
+              className="w-28 h-28 md:w-36 md:h-36 lg:w-40 lg:h-40 object-contain"
             />
           ) : (
-            <div className="w-32 h-32 md:w-40 md:h-40 flex items-center justify-center bg-red-900/50 rounded-lg">
-              <span className="text-red-400 font-bold text-lg">OUT</span>
+            <div className="w-28 h-28 md:w-36 md:h-36 lg:w-40 lg:h-40 flex items-center justify-center bg-red-900/50 rounded-lg">
+              <span className="text-red-400 font-bold text-sm md:text-base lg:text-lg">OUT</span>
             </div>
           )}
           <div className="flex flex-col items-center">
-            <h3 className={`font-extrabold text-xl md:text-2xl ${
+            <h3 className={`font-extrabold text-lg md:text-xl lg:text-2xl ${
               otherPlayers[2]?.id === currentPlayerIndex ? 'text-blue-400' : 
               otherPlayers[2]?.isEliminated ? 'text-red-400' : 'text-yellow-100'
             }`}>
               Mom-Mom
-              {otherPlayers[2]?.id === currentPlayerIndex && <span className="ml-2 text-sm">(Playing)</span>}
+              {otherPlayers[2]?.id === currentPlayerIndex && <span className="ml-2 text-xs md:text-sm">(Playing)</span>}
             </h3>
             <div className="flex items-center gap-2 mt-1">
-              <Coins className="w-5 h-5 text-yellow-400" />
-              <span className="text-yellow-400 font-bold text-lg">{otherPlayers[2]?.coins}</span>
+              <Coins className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" />
+              <span className="text-yellow-400 font-bold text-base md:text-lg">{otherPlayers[2]?.coins}</span>
             </div>
           </div>
         </div>
