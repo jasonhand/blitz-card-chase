@@ -77,6 +77,12 @@ const BlitzGame = () => {
 
   // Handle AI turns
   useEffect(() => {
+    // Check if user is eliminated first
+    const userPlayer = gameState.players.find(p => p.name === userName);
+    if (userPlayer?.isEliminated || gameState.gamePhase === 'gameEnd' || gameState.gamePhase === 'setup') {
+      return;
+    }
+    
     if (gameState.gamePhase === 'playing' || gameState.gamePhase === 'finalRound') {
       const currentPlayer = gameState.players[gameState.currentPlayerIndex];
       const isUserTurn = gameState.currentPlayerIndex === 0;
@@ -90,7 +96,7 @@ const BlitzGame = () => {
         return () => clearTimeout(aiTurnDelay);
       }
     }
-  }, [gameState.currentPlayerIndex, turnPhase, gameState.gamePhase]);
+  }, [gameState.currentPlayerIndex, turnPhase, gameState.gamePhase, userName, gameState.players]);
 
   const executeAITurn = async () => {
     const currentPlayer = gameState.players[gameState.currentPlayerIndex];
@@ -760,7 +766,7 @@ const BlitzGame = () => {
           setEliminatedPlayer({ name: player.name, image: playerImage });
           setShowEliminationModal(true);
         } else {
-          // Show game over modal for user
+          // User is eliminated - show game over modal and end game
           setShowGameOverModal(true);
         }
       }
@@ -771,6 +777,17 @@ const BlitzGame = () => {
     });
 
     const activePlayers = updatedPlayers.filter(p => !p.isEliminated);
+    
+    // Check if user is eliminated
+    const userPlayer = updatedPlayers.find(p => p.name === userName);
+    if (userPlayer && userPlayer.isEliminated) {
+      return {
+        ...gameState,
+        players: updatedPlayers,
+        gamePhase: 'gameEnd',
+        message: `Game Over! You ran out of coins.`
+      };
+    }
     
     if (activePlayers.length === 1) {
       setShowWinnerModal(true);
