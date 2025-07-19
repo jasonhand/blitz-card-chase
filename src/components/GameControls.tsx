@@ -43,16 +43,9 @@ const GameControls = ({
     );
   }
 
+  // Game end phase handled by GameOverModal, not here
   if (gamePhase === 'gameEnd') {
-    return (
-      <Card className="p-6 bg-slate-800 text-center space-y-4">
-        <div className="text-green-400 text-xl font-bold">Game Over!</div>
-        <div className="text-white">{message}</div>
-        <Button onClick={onNewGame} className="bg-blue-600 hover:bg-blue-700" data-dd-action-name="Start New Game">
-          Start New Game
-        </Button>
-      </Card>
-    );
+    return null;
   }
 
   return (

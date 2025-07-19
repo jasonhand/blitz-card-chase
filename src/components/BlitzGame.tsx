@@ -1086,36 +1086,20 @@ const BlitzGame = () => {
     );
   }
 
+  // Game end phase handled by GameOverModal only
   if (gameState.gamePhase === 'gameEnd') {
     return (
-      <div className="max-w-7xl mx-auto relative">
-        {showChangeNameBtn && (
-          <button
-            className="absolute top-4 left-4 bg-slate-800/80 hover:bg-yellow-400 hover:text-black text-yellow-300 rounded-full p-4 shadow-lg border-2 border-yellow-400 transition-colors flex items-center justify-center"
-            onClick={() => setShowNameInput(true)}
-            aria-label="Change Name"
-          >
-            <UserIcon className="w-8 h-8" />
-          </button>
-        )}
-        <div>
-          <GameControls
-            gamePhase={gameState.gamePhase}
-            isCurrentPlayerTurn={false}
-            canKnock={false}
-            canDraw={false}
-            canDiscard={false}
-            hasSelectedCard={false}
-            topDiscardCard={topDiscardCard}
-            onKnock={handleKnock}
-            onDrawFromDeck={handleDrawFromDeck}
-            onDrawFromDiscard={handleDrawFromDiscard}
-            onDiscard={handleDiscard}
-            onNewGame={handleNewGame}
-            message={gameState.message}
-          />
-        </div>
-      </div>
+      <>
+        {/* Show GameOverModal only when user is eliminated */}
+        <GameOverModal
+          isOpen={showGameOverModal}
+          onClose={() => setShowGameOverModal(false)}
+          onPlayAgain={() => {
+            setShowGameOverModal(false);
+            setShowNameInput(true);
+          }}
+        />
+      </>
     );
   }
 
