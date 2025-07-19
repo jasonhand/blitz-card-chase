@@ -17,7 +17,7 @@ const HandRevealModal: React.FC<HandRevealModalProps> = ({ players, userName, on
     }, 5000);
 
     return () => clearTimeout(timer);
-  }, [onContinue]);
+  }, []); // Remove onContinue from dependencies to prevent timer reset
 
   const handleClick = () => {
     onContinue();

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { GameState, Player, Card } from "@/types/game";
 import { deckApi } from "@/services/deckApi";
 import { calculatePlayerScores, createInitialPlayer, hasBlitz } from "@/utils/gameUtils";
@@ -956,13 +956,13 @@ const BlitzGame = () => {
     }
   };
 
-  const handleHandRevealContinue = () => {
+  const handleHandRevealContinue = useCallback(() => {
     setShowHandReveal(false);
     const currentPlayers = gameState.players;
     setTimeout(() => {
       startNewRound(currentPlayers);
     }, 200);
-  };
+  }, [gameState.players]);
 
   const startNewRound = async (players: Player[]) => {
     try {
