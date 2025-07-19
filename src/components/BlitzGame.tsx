@@ -47,6 +47,7 @@ const BlitzGame = () => {
   const [showHandReveal, setShowHandReveal] = useState(false);
   const [isCalculatingResults, setIsCalculatingResults] = useState(false);
   const [handRevealPlayers, setHandRevealPlayers] = useState<Player[]>([]);
+  const [roundCalculationInProgress, setRoundCalculationInProgress] = useState(false);
 
   // On mount, check for saved name
   useEffect(() => {
@@ -909,19 +910,15 @@ const BlitzGame = () => {
   };
 
   const calculateRoundResults = useCallback(() => {
-    // Prevent multiple calls with more robust checking
-    if (isCalculatingResults) {
-      console.log("calculateRoundResults already in progress, skipping...");
+    // Use dedicated state to prevent multiple calls - this is CRITICAL
+    if (roundCalculationInProgress) {
+      console.log("Round calculation already in progress, skipping duplicate call...");
       return;
     }
     
-    // Double-check game state hasn't changed during processing
-    if (gameState.gamePhase === 'roundEnd' || gameState.gamePhase === 'gameEnd') {
-      console.log("Game already ended, skipping calculation...");
-      return;
-    }
-    
-    setIsCalculatingResults(true);
+    // Set flag immediately to block any other calls
+    setRoundCalculationInProgress(true);
+    console.log("STARTING round calculation - blocking future calls");
     
     console.log("=== CALCULATING ROUND RESULTS ===");
     console.log("Players before calculation:", gameState.players.map(p => `${p.name}: ${p.coins} coins`));
@@ -1033,7 +1030,7 @@ const BlitzGame = () => {
         message: `Game Over! You ran out of coins.`
       }));
       setShowGameOverModal(true);
-      setIsCalculatingResults(false);
+      setRoundCalculationInProgress(false); // Reset flag
       return;
     } else if (userPlayer) {
       console.log(`User ${userName} NOT eliminated - has ${userPlayer.coins} coins`);
@@ -1049,7 +1046,7 @@ const BlitzGame = () => {
         winner: remainingPlayers[0],
         message: `${remainingPlayers[0].name} wins the game!`
       }));
-      setIsCalculatingResults(false);
+      setRoundCalculationInProgress(false); // Reset flag
     } else {
       // Show hand reveal before starting new round
       setGameState(prev => ({
@@ -1071,10 +1068,10 @@ const BlitzGame = () => {
       })));
       setTimeout(() => {
         setShowHandReveal(true);
-        setIsCalculatingResults(false);
+        setRoundCalculationInProgress(false); // Reset flag here too
       }, 1500);
     }
-  }, [isCalculatingResults, gameState.gamePhase, gameState.knocker, gameState.players, userName, setGameState, setShowGameOverModal, setEliminatedPlayer, setShowEliminationModal, setHandRevealPlayers, setShowHandReveal]);
+  }, [roundCalculationInProgress, gameState.knocker, gameState.players, userName]);
 
   const handleHandRevealContinue = useCallback(() => {
     if (!showHandReveal) return; // Prevent multiple calls
