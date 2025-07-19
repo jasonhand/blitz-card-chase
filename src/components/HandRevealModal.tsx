@@ -17,9 +17,11 @@ const HandRevealModal: React.FC<HandRevealModalProps> = ({ players, userName, on
     }, 5000);
 
     return () => clearTimeout(timer);
-  }, []); // Remove onContinue from dependencies to prevent timer reset
+  }, [onContinue]);
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    // Prevent event bubbling if clicking on inner content
+    if (e.target !== e.currentTarget) return;
     onContinue();
   };
 
@@ -43,7 +45,7 @@ const HandRevealModal: React.FC<HandRevealModalProps> = ({ players, userName, on
       className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 cursor-pointer"
       onClick={handleClick}
     >
-      <div className="bg-slate-800 border-2 border-yellow-400 rounded-lg p-6 max-w-4xl w-full mx-4 animate-fade-in">
+      <div className="bg-slate-800 border-2 border-yellow-400 rounded-lg p-6 max-w-4xl w-full mx-4 animate-fade-in" onClick={(e) => e.stopPropagation()}>
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold text-yellow-300 mb-2">Round Complete - Hands Revealed</h2>
           <p className="text-gray-300 text-sm">Click anywhere to continue (auto-continues in 5 seconds)</p>

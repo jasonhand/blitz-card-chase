@@ -45,6 +45,7 @@ const BlitzGame = () => {
   const [showWinnerModal, setShowWinnerModal] = useState(false);
   const [showGameOverModal, setShowGameOverModal] = useState(false);
   const [showHandReveal, setShowHandReveal] = useState(false);
+  const [isCalculatingResults, setIsCalculatingResults] = useState(false);
 
   // On mount, check for saved name
   useEffect(() => {
@@ -877,6 +878,10 @@ const BlitzGame = () => {
   };
 
   const calculateRoundResults = () => {
+    // Prevent multiple calls
+    if (isCalculatingResults) return;
+    setIsCalculatingResults(true);
+    
     console.log("Calculating round results...");
     const knocker = gameState.players[gameState.knocker!];
     const otherPlayers = gameState.players.filter((_, index) => index !== gameState.knocker);
@@ -927,6 +932,7 @@ const BlitzGame = () => {
         message: `Game Over! You ran out of coins.`
       }));
       setShowGameOverModal(true);
+      setIsCalculatingResults(false);
       return;
     }
     
@@ -952,6 +958,7 @@ const BlitzGame = () => {
       });
       setTimeout(() => {
         setShowHandReveal(true);
+        setIsCalculatingResults(false);
       }, 1500);
     }
   };
