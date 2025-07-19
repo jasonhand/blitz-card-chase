@@ -981,7 +981,11 @@ const BlitzGame = () => {
     // ONLY check if user is eliminated when coins reach exactly 0
     const userPlayer = updatedPlayers.find(p => p.name === userName);
     console.log(`User ${userName} coins after round: ${userPlayer?.coins}`);
+    console.log(`User isEliminated status: ${userPlayer?.isEliminated}`);
+    console.log(`About to check if user should be eliminated...`);
+    
     if (userPlayer && userPlayer.coins === 0) {
+      console.log(`User ${userName} eliminated with 0 coins - showing game over modal`);
       setGameState(prev => ({
         ...prev,
         players: updatedPlayers,
@@ -991,6 +995,8 @@ const BlitzGame = () => {
       setShowGameOverModal(true);
       setIsCalculatingResults(false);
       return;
+    } else if (userPlayer) {
+      console.log(`User ${userName} NOT eliminated - has ${userPlayer.coins} coins`);
     }
     
     const remainingPlayers = updatedPlayers.filter(p => !p.isEliminated);
