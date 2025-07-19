@@ -160,7 +160,7 @@ const GameLayout = ({
         <div className="absolute bottom-8 left-4 z-20 flex items-center gap-4">
           {!otherPlayers[2]?.isEliminated ? (
             <img
-              src="/Bill_images/Peggy.png"
+              src="/lovable-uploads/60a0284f-f13d-48bf-aa43-b3d1eed03a2b.png"
               alt="Mom-Mom"
               className="w-28 h-28 md:w-36 md:h-36 lg:w-40 lg:h-40 object-contain"
             />

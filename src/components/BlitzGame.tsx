@@ -784,7 +784,7 @@ const BlitzGame = () => {
           let playerImage = "/Bill_images/Bill_pixel.png"; // default
           if (player.name === "Bill") playerImage = "/Bill_images/Bill_pixel.png";
           else if (player.name === "Peggy") playerImage = "/Bill_images/Peggy.png";
-          else if (player.name === "Mom-Mom") playerImage = "/Bill_images/Peggy.png"; // Use Peggy's image for Mom-Mom
+          else if (player.name === "Mom-Mom") playerImage = "/lovable-uploads/60a0284f-f13d-48bf-aa43-b3d1eed03a2b.png";
           setEliminatedPlayer({ name: player.name, image: playerImage });
           setShowEliminationModal(true);
         } else {
