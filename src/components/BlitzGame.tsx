@@ -382,6 +382,8 @@ const BlitzGame = () => {
         console.log("Not enough cards remaining, creating fresh deck...");
         const newDeckResponse = await deckApi.createNewDeck();
         const newDeckId = newDeckResponse.deck_id;
+        
+        // Update state with new deck
         setGameState(prev => ({
           ...prev,
           deckId: newDeckId
@@ -405,7 +407,25 @@ const BlitzGame = () => {
       
       // Ensure we have exactly 12 cards
       if (drawResponse.cards.length !== 12) {
-        throw new Error(`Expected 12 cards, got ${drawResponse.cards.length}`);
+        // If we don't have enough cards from current deck, create fresh deck
+        console.log("Not enough cards remaining, creating fresh deck...");
+        const newDeckResponse = await deckApi.createNewDeck();
+        const newDeckId = newDeckResponse.deck_id;
+        
+        setGameState(prev => ({
+          ...prev,
+          deckId: newDeckId
+        }));
+        setDeckRemaining(52);
+        
+        const freshDrawResponse = await deckApi.drawCards(newDeckId, 12);
+        console.log("Drew cards from fresh deck:", freshDrawResponse.cards.length);
+        
+        if (freshDrawResponse.cards.length !== 12) {
+          throw new Error(`Expected 12 cards, got ${freshDrawResponse.cards.length}`);
+        }
+        
+        return await processCardDeal(freshDrawResponse, players);
       }
       
       return await processCardDeal(drawResponse, players);
@@ -839,7 +859,7 @@ const BlitzGame = () => {
       let phaseMessage = "";
       
       if (prev.gamePhase === 'finalRound') {
-        phaseMessage = `${nextPlayer.name}'s final turn`;
+        phaseMessage = nextIndex === 0 ? `You're up` : `${nextPlayer.name}'s up`;
       } else {
         phaseMessage = nextIndex === 0 ? 
           `You're up! Draw or knock!` : 
