@@ -931,63 +931,39 @@ const BlitzGame = () => {
     const otherScores = otherPlayers.map(p => p.bestScore);
     const lowestOtherScore = Math.min(...otherScores);
     console.log(`Knocker score: ${knockerScore}, lowest other score: ${lowestOtherScore}`);
-    let updatedPlayers = [...gameState.players];
+    
+    // Create a COMPLETELY NEW player array to avoid any reference issues
+    let updatedPlayers = gameState.players.map(player => ({ ...player }));
     let resultMessage = "";
+    
+    // Find players by ID to avoid index confusion
+    const knockerIndex = updatedPlayers.findIndex(p => p.id === knocker.id);
+    const lowestScorer = otherPlayers.find(p => p.bestScore === lowestOtherScore)!;
+    const lowestScorerIndex = updatedPlayers.findIndex(p => p.id === lowestScorer.id);
+    
+    console.log(`Knocker index: ${knockerIndex}, Lowest scorer: ${lowestScorer.name} at index: ${lowestScorerIndex}`);
     if (knockerScore > lowestOtherScore) {
-      // Knocker wins, lowest scorer loses 1 coin, knocker gains 1 coin
-      const lowestScorer = otherPlayers.find(p => p.bestScore === lowestOtherScore)!;
-      console.log(`Lowest scorer: ${lowestScorer.name} with score ${lowestScorer.bestScore}, coins before: ${lowestScorer.coins}`);
+      // Knocker wins - SIMPLE direct coin transfer
+      console.log(`Knocker ${knocker.name} wins! Transferring 1 coin from ${lowestScorer.name}`);
       
-      // Update players by finding the correct array index, not using player.id as index
-      updatedPlayers = updatedPlayers.map(player => {
-        if (player.id === lowestScorer.id) {
-          const newCoins = Math.max(0, player.coins - 1);
-          console.log(`Lowest scorer ${player.name} coins after deduction: ${newCoins}`);
-          // CRITICAL: Prevent user from losing more than 1 coin at a time
-          if (player.name === userName && player.coins - newCoins > 1) {
-            console.error(`ERROR: User ${userName} would lose ${player.coins - newCoins} coins, limiting to 1`);
-            return { ...player, coins: Math.max(0, player.coins - 1) };
-          }
-          return { ...player, coins: newCoins };
-        }
-        if (player.id === knocker.id) {
-          const newCoins = player.coins + 1;
-          // CRITICAL: Prevent user from gaining more than 1 coin from successful knock
-          if (player.name === userName && newCoins - player.coins > 1) {
-            console.error(`ERROR: User ${userName} would gain ${newCoins - player.coins} coins, limiting to 1`);
-            return { ...player, coins: player.coins + 1 };
-          }
-          return { ...player, coins: newCoins };
-        }
-        return player;
-      });
+      // Make coin changes with direct assignment to prevent any reference issues
+      updatedPlayers[knockerIndex].coins += 1;
+      updatedPlayers[lowestScorerIndex].coins = Math.max(0, updatedPlayers[lowestScorerIndex].coins - 1);
+      
+      console.log(`AFTER TRANSFER: ${knocker.name} has ${updatedPlayers[knockerIndex].coins} coins, ${lowestScorer.name} has ${updatedPlayers[lowestScorerIndex].coins} coins`);
       
       resultMessage = `${knocker.name} won! ${lowestScorer.name} loses 1 coin (transferred to ${knocker.name}).`;
     } else {
-      // Knocker loses 2 coins for unsuccessful knock, highest scorer gains 2 coins
+      // Knocker loses - SIMPLE direct coin transfer  
       const highestScorer = otherPlayers.reduce((prev, curr) => (curr.bestScore > prev.bestScore ? curr : prev), otherPlayers[0]);
+      const highestScorerIndex = updatedPlayers.findIndex(p => p.id === highestScorer.id);
+      console.log(`Knocker ${knocker.name} fails! Transferring 2 coins to ${highestScorer.name}`);
       
-      updatedPlayers = updatedPlayers.map(player => {
-        if (player.id === knocker.id) {
-          const newCoins = Math.max(0, player.coins - 2);
-          // CRITICAL: Prevent user from losing more than 2 coins from failed knock
-          if (player.name === userName && player.coins - newCoins > 2) {
-            console.error(`ERROR: User ${userName} would lose ${player.coins - newCoins} coins from failed knock, limiting to 2`);
-            return { ...player, coins: Math.max(0, player.coins - 2) };
-          }
-          return { ...player, coins: newCoins };
-        }
-        if (player.id === highestScorer.id) {
-          const newCoins = player.coins + 2;
-          // CRITICAL: Prevent user from gaining more than 2 coins from failed opponent knock
-          if (player.name === userName && newCoins - player.coins > 2) {
-            console.error(`ERROR: User ${userName} would gain ${newCoins - player.coins} coins, limiting to 2`);
-            return { ...player, coins: player.coins + 2 };
-          }
-          return { ...player, coins: newCoins };
-        }
-        return player;
-      });
+      // Make coin changes with direct assignment
+      updatedPlayers[knockerIndex].coins = Math.max(0, updatedPlayers[knockerIndex].coins - 2);
+      updatedPlayers[highestScorerIndex].coins += 2;
+      
+      console.log(`AFTER TRANSFER: ${knocker.name} has ${updatedPlayers[knockerIndex].coins} coins, ${highestScorer.name} has ${updatedPlayers[highestScorerIndex].coins} coins`);
       
       resultMessage = `${knocker.name}'s knock failed! Loses 2 coins (transferred to ${highestScorer.name}).`;
     }
