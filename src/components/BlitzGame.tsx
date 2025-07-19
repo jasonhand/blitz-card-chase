@@ -13,6 +13,7 @@ import { User as UserIcon } from "lucide-react";
 import PlayerEliminationModal from "./PlayerEliminationModal";
 import WinnerModal from "./WinnerModal";
 import GameOverModal from "./GameOverModal";
+import HandRevealModal from "./HandRevealModal";
 
 const BlitzGame = () => {
   const { toast } = useToast();
@@ -43,6 +44,7 @@ const BlitzGame = () => {
   const [eliminatedPlayer, setEliminatedPlayer] = useState<{ name: string; image: string } | null>(null);
   const [showWinnerModal, setShowWinnerModal] = useState(false);
   const [showGameOverModal, setShowGameOverModal] = useState(false);
+  const [showHandReveal, setShowHandReveal] = useState(false);
 
   // On mount, check for saved name
   useEffect(() => {
@@ -939,15 +941,27 @@ const BlitzGame = () => {
         message: `${remainingPlayers[0].name} wins the game!`
       }));
     } else {
-      // Start new round
+      // Show hand reveal before starting new round
+      setGameState(prev => ({
+        ...prev,
+        players: updatedPlayers
+      }));
       toast({
         title: "Round Complete",
         description: resultMessage
       });
       setTimeout(() => {
-        startNewRound(updatedPlayers);
-      }, 2000);
+        setShowHandReveal(true);
+      }, 1500);
     }
+  };
+
+  const handleHandRevealContinue = () => {
+    setShowHandReveal(false);
+    const currentPlayers = gameState.players;
+    setTimeout(() => {
+      startNewRound(currentPlayers);
+    }, 200);
   };
 
   const startNewRound = async (players: Player[]) => {
@@ -1123,6 +1137,14 @@ const BlitzGame = () => {
         playerName={eliminatedPlayer?.name || ""}
         playerImage={eliminatedPlayer?.image || ""}
       />
+
+      {showHandReveal && (
+        <HandRevealModal
+          players={gameState.players}
+          userName={userName}
+          onContinue={handleHandRevealContinue}
+        />
+      )}
 
       {/* Winner Modal */}
       <WinnerModal
