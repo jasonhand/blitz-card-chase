@@ -22,6 +22,15 @@ const GameOverModal = ({
         </DialogHeader>
         
         <div className="flex flex-col items-center space-y-6 py-4">
+          {/* Bill's Avatar */}
+          <div className="flex justify-center mb-4">
+            <img
+              src="/Bill_images/Bill_pixel.png"
+              alt="Bill"
+              className="w-24 h-24 md:w-32 md:h-32 object-contain"
+            />
+          </div>
+          
           <div className="text-6xl mb-4">💸</div>
           
           <div className="space-y-3">

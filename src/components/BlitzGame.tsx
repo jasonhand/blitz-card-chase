@@ -815,8 +815,10 @@ const BlitzGame = () => {
           setEliminatedPlayer({ name: player.name, image: playerImage });
           setShowEliminationModal(true);
         } else {
-          // User is eliminated - show game over modal and end game
-          setShowGameOverModal(true);
+          // User is eliminated - but only show game over modal if coins reach exactly 0
+          if (player.coins === 0) {
+            setShowGameOverModal(true);
+          }
         }
       }
       return {
