@@ -78,9 +78,10 @@ const PlayerZone = ({
           </div>
         )}
 
+        {/* Show elimination status */}
         {player.isEliminated && (
           <div className="text-center py-4">
-            <p className="text-red-400 font-bold">ELIMINATED</p>
+            <p className="text-red-400 font-bold text-lg">OUT</p>
             <p className="text-xs text-gray-500">Out of coins</p>
           </div>
         )}

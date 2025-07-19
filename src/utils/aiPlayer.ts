@@ -57,8 +57,8 @@ export const makeAIDecision = (
   const riskTolerance = 0.7 + (player.id * 0.1); // Different risk levels
   const aggressiveness = 0.6 + (player.id * 0.08);
   
-  // Decision thresholds
-  const knockThreshold = Math.floor(20 + (riskTolerance * 8)); // 20-27 range
+  // Decision thresholds - AI knocks at 15+ points
+  const knockThreshold = 15; // All AI players knock at 15+ points
   const conservativeThreshold = Math.floor(15 + (aggressiveness * 10)); // 15-25 range
   
   // If in final round (someone knocked), NO MORE KNOCKING ALLOWED

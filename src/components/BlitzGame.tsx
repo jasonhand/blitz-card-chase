@@ -335,7 +335,8 @@ const BlitzGame = () => {
       const players = [
         createInitialPlayer(0, nameToUse),
         createInitialPlayer(1, "Bill"),
-        createInitialPlayer(2, "Peggy")
+        createInitialPlayer(2, "Peggy"),
+        createInitialPlayer(3, "Mom-Mom")
       ];
 
       // Create new deck
@@ -679,7 +680,10 @@ const BlitzGame = () => {
       if (player.coins <= 0 && !player.isEliminated) {
         // Show elimination modal for AI players
         if (player.name !== userName) {
-          const playerImage = player.name === "Bill" ? "/Bill_images/Bill_pixel.png" : "/Bill_images/Peggy.png";
+          let playerImage = "/Bill_images/Bill_pixel.png"; // default
+          if (player.name === "Bill") playerImage = "/Bill_images/Bill_pixel.png";
+          else if (player.name === "Peggy") playerImage = "/Bill_images/Peggy.png";
+          else if (player.name === "Mom-Mom") playerImage = "/Bill_images/Peggy.png"; // Use Peggy's image for Mom-Mom
           setEliminatedPlayer({ name: player.name, image: playerImage });
           setShowEliminationModal(true);
         } else {
@@ -876,7 +880,7 @@ const BlitzGame = () => {
           <DialogContent className="bg-slate-800 border-2 border-yellow-400 p-8">
             <DialogHeader>
               <DialogTitle className="text-3xl font-bold text-yellow-300 text-center mb-6">
-                Welcome to Blitz with Bill & Peggy!
+                Welcome to Blitz with Bill, Peggy & Mom-Mom!
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-6">
