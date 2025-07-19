@@ -910,10 +910,17 @@ const BlitzGame = () => {
 
   const calculateRoundResults = useCallback(() => {
     // Prevent multiple calls with more robust checking
-    if (isCalculatingResults || gameState.gamePhase === 'roundEnd' || gameState.gamePhase === 'gameEnd') {
-      console.log("calculateRoundResults already in progress or round ended, skipping...");
+    if (isCalculatingResults) {
+      console.log("calculateRoundResults already in progress, skipping...");
       return;
     }
+    
+    // Double-check game state hasn't changed during processing
+    if (gameState.gamePhase === 'roundEnd' || gameState.gamePhase === 'gameEnd') {
+      console.log("Game already ended, skipping calculation...");
+      return;
+    }
+    
     setIsCalculatingResults(true);
     
     console.log("=== CALCULATING ROUND RESULTS ===");
@@ -1048,8 +1055,12 @@ const BlitzGame = () => {
     try {
       console.log("Starting new round...");
       
-      // Reset game state for new round - but preserve coins and elimination status
-      const resetPlayers = players.map(player => ({
+      // Filter out eliminated players completely for new round
+      const activePlayers = players.filter(p => !p.isEliminated);
+      console.log(`Active players for new round: ${activePlayers.map(p => p.name).join(', ')}`);
+      
+      // Reset game state for new round - only keep active players
+      const resetPlayers = activePlayers.map(player => ({
         ...player,
         cards: [],
         scores: { hearts: 0, diamonds: 0, clubs: 0, spades: 0 },
@@ -1071,9 +1082,9 @@ const BlitzGame = () => {
         message: "Starting new round..."
       }));
       
-      // Deal new cards
-      if (gameState.deckId) {
-        await dealInitialCards(gameState.deckId, resetPlayers);
+      // Only deal new cards to active (non-eliminated) players that were already filtered
+      if (gameState.deckId && activePlayers.length > 0) {
+        await dealInitialCards(gameState.deckId, activePlayers);
       }
       
     } catch (error) {

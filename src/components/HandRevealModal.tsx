@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Card as CardType, Player } from '../types/game';
 import { Card } from './ui/card';
 
@@ -9,7 +9,14 @@ interface HandRevealModalProps {
 }
 
 const HandRevealModal: React.FC<HandRevealModalProps> = ({ players, userName, onContinue }) => {
-  const aiPlayers = players.filter(p => p.name !== userName);
+  // Create a completely frozen snapshot to prevent any updates
+  const frozenPlayers = useMemo(() => {
+    return players.filter(p => p.name !== userName).map(player => ({
+      ...player,
+      cards: player.cards.map(card => ({ ...card })),
+      scores: { ...player.scores }
+    }));
+  }, []);  // Empty dependency array means this never changes
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -52,7 +59,7 @@ const HandRevealModal: React.FC<HandRevealModalProps> = ({ players, userName, on
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {aiPlayers.map((player) => (
+          {frozenPlayers.map((player) => (
             <Card key={player.id} className="p-4 bg-slate-700 border-yellow-400">
               <div className="text-center mb-4">
                 <h3 className="text-lg font-bold text-white mb-1">{player.name}</h3>
