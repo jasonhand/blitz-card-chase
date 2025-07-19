@@ -1014,6 +1014,8 @@ const BlitzGame = () => {
           description: resultMessage
         });
       }
+      // Store snapshot of players for hand reveal
+      setHandRevealPlayers([...updatedPlayers]);
       setTimeout(() => {
         setShowHandReveal(true);
         setIsCalculatingResults(false);
