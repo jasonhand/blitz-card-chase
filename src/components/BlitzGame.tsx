@@ -12,6 +12,7 @@ import { Button } from "./ui/button";
 import { User as UserIcon } from "lucide-react";
 import PlayerEliminationModal from "./PlayerEliminationModal";
 import WinnerModal from "./WinnerModal";
+import GameOverModal from "./GameOverModal";
 
 const BlitzGame = () => {
   const { toast } = useToast();
@@ -41,6 +42,7 @@ const BlitzGame = () => {
   const [showEliminationModal, setShowEliminationModal] = useState(false);
   const [eliminatedPlayer, setEliminatedPlayer] = useState<{ name: string; image: string } | null>(null);
   const [showWinnerModal, setShowWinnerModal] = useState(false);
+  const [showGameOverModal, setShowGameOverModal] = useState(false);
 
   // On mount, check for saved name
   useEffect(() => {
@@ -125,7 +127,7 @@ const BlitzGame = () => {
       knocker: prev.currentPlayerIndex,
       gamePhase: 'finalRound',
       finalRoundPlayers: new Set(),
-        finalRoundTurnsRemaining: 2,
+      finalRoundTurnsRemaining: 3,
       message: `${currentPlayer.name === userName ? `${userName}, you knocked! Each player gets one final turn.` : `${currentPlayer.name} knocked! Each player gets one final turn.`}`
     }));
     setTimeout(() => {
@@ -236,12 +238,13 @@ const BlitzGame = () => {
       
       // Note: deckRemaining already set above in each reshuffle branch
       
-      // Check if final round is complete
+      // Check if final round is complete after AI turn
       if (gameState.gamePhase === 'finalRound') {
+        const activePlayers = gameState.players.filter(p => !p.isEliminated);
         const newTurnsRemaining = gameState.finalRoundTurnsRemaining - 1;
         
         if (newTurnsRemaining <= 0) {
-          console.log("Final round complete (3 turns taken), calculating scores...");
+          console.log("Final round complete (all players got final turn), calculating scores...");
           calculateRoundResults();
           return;
         } else {
@@ -301,8 +304,9 @@ const BlitzGame = () => {
       message: `${finalPlayer.name} drew from discard and discarded.`
     }));
     
-    // Check if final round is complete
+    // Check if final round is complete after AI turn
     if (gameState.gamePhase === 'finalRound') {
+      const activePlayers = gameState.players.filter(p => !p.isEliminated);
       const newTurnsRemaining = gameState.finalRoundTurnsRemaining - 1;
       
       if (newTurnsRemaining <= 0) {
@@ -310,7 +314,7 @@ const BlitzGame = () => {
           title: "Showdown!",
           description: "Let's see your hand."
         });
-        console.log("Final round complete (3 turns taken), calculating scores...");
+        console.log("Final round complete (all players got final turn), calculating scores...");
         calculateRoundResults();
         return;
       } else {
@@ -467,7 +471,7 @@ const BlitzGame = () => {
       knocker: prev.currentPlayerIndex,
       gamePhase: 'finalRound',
       finalRoundPlayers: new Set(),
-      finalRoundTurnsRemaining: 2,
+      finalRoundTurnsRemaining: 3,
       message: `${prev.players[prev.currentPlayerIndex].name === userName ? `${userName}, you knocked! Each player gets one final turn.` : `${prev.players[prev.currentPlayerIndex].name} knocked! Each player gets one final turn.`}`
     }));
     setTimeout(() => {
@@ -681,8 +685,9 @@ const BlitzGame = () => {
       setPendingDrawCard(null);
       setSelectedCardIndex(null);
       
-      // Check if final round is complete
+      // Check if final round is complete after user turn
       if (gameState.gamePhase === 'finalRound') {
+        const activePlayers = gameState.players.filter(p => !p.isEliminated);
         const newTurnsRemaining = gameState.finalRoundTurnsRemaining - 1;
         
         if (newTurnsRemaining <= 0) {
@@ -690,7 +695,7 @@ const BlitzGame = () => {
             title: "Showdown!",
             description: "Let's see your hand."
           });
-          console.log("Final round complete (3 turns taken), calculating scores...");
+          console.log("Final round complete (all players got final turn), calculating scores...");
           calculateRoundResults();
           return;
         } else {
@@ -729,11 +734,8 @@ const BlitzGame = () => {
           setEliminatedPlayer({ name: player.name, image: playerImage });
           setShowEliminationModal(true);
         } else {
-          toast({
-            title: "You're Eliminated!",
-            description: "You've run out of coins. Better luck next time!",
-            variant: "destructive"
-          });
+          // Show game over modal for user
+          setShowGameOverModal(true);
         }
       }
       return {
@@ -1054,6 +1056,15 @@ const BlitzGame = () => {
           setShowNameInput(true);
         }}
         winnerName={gameState.winner?.name || ""}
+      />
+      
+      <GameOverModal
+        isOpen={showGameOverModal}
+        onClose={() => setShowGameOverModal(false)}
+        onPlayAgain={() => {
+          setShowGameOverModal(false);
+          setShowNameInput(true);
+        }}
       />
     </>
   );
