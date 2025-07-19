@@ -817,15 +817,13 @@ const BlitzGame = () => {
           setEliminatedPlayer({ name: player.name, image: playerImage });
           setShowEliminationModal(true);
         } else {
-          // User is eliminated - but only show game over modal if coins reach exactly 0
-          if (player.coins === 0) {
-            setShowGameOverModal(true);
-          }
+          // Don't show game over modal here - only in calculateRoundResults
+          // when coins reach exactly 0
         }
       }
       return {
         ...player,
-        isEliminated: player.coins <= 0
+        isEliminated: player.coins === 0  // Only eliminate at exactly 0 coins
       };
     });
 
@@ -960,13 +958,12 @@ const BlitzGame = () => {
     // Check for eliminations - but be more careful about when to actually eliminate
     const playersWithEliminations = updatedPlayers.map(player => ({
       ...player,
-      isEliminated: player.coins === 0
+      isEliminated: player.coins === 0  // Only eliminate at exactly 0 coins
     }));
     
-    // Only mark AI players as eliminated if they have 0 coins
-    // Check if any AI players should show elimination modal
+    // Only mark AI players as eliminated if they have 0 coins and show elimination modal
     playersWithEliminations.forEach(player => {
-      if (player.coins === 0 && !player.isEliminated && player.name !== userName) {
+      if (player.coins === 0 && !gameState.players.find(p => p.id === player.id)?.isEliminated && player.name !== userName) {
         let playerImage = "/Bill_images/Bill_pixel.png"; // default
         if (player.name === "Bill") playerImage = "/Bill_images/Bill_pixel.png";
         else if (player.name === "Peggy") playerImage = "/Bill_images/Peggy.png";
@@ -979,7 +976,7 @@ const BlitzGame = () => {
     // Use the updated players with elimination flags
     updatedPlayers = playersWithEliminations;
     
-    // Check if user is eliminated first (only when coins reach exactly 0)
+    // ONLY check if user is eliminated when coins reach exactly 0
     const userPlayer = updatedPlayers.find(p => p.name === userName);
     console.log(`User ${userName} coins after round: ${userPlayer?.coins}`);
     if (userPlayer && userPlayer.coins === 0) {
