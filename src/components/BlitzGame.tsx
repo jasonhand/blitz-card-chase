@@ -103,6 +103,15 @@ const BlitzGame = () => {
 
   const executeAITurn = async () => {
     const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+    
+    // Safety check: Don't execute turns for eliminated players
+    if (currentPlayer.isEliminated) {
+      console.log(`Skipping turn for eliminated player ${currentPlayer.name}`);
+      moveToNextPlayer();
+      setTurnPhase('decision');
+      return;
+    }
+    
     const topDiscardCard = gameState.discardPile[gameState.discardPile.length - 1] || null;
     const otherPlayersCount = gameState.players.filter(p => !p.isEliminated).length - 1;
     
