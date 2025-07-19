@@ -146,7 +146,8 @@ const BlitzGame = () => {
       knocker: prev.currentPlayerIndex,
       gamePhase: 'finalRound',
       finalRoundPlayers: new Set(),
-      finalRoundTurnsRemaining: 3,
+      // Calculate turns needed based on active players, minus the knocker
+      finalRoundTurnsRemaining: prev.players.filter(p => !p.isEliminated).length - 1,
       message: `${currentPlayer.name === userName ? `${userName}, you knocked! Each player gets one final turn.` : `${currentPlayer.name} knocked! Each player gets one final turn.`}`
     }));
     setTimeout(() => {
@@ -547,7 +548,8 @@ const BlitzGame = () => {
       knocker: prev.currentPlayerIndex,
       gamePhase: 'finalRound',
       finalRoundPlayers: new Set(),
-      finalRoundTurnsRemaining: 3,
+      // Calculate turns needed based on active players, minus the knocker
+      finalRoundTurnsRemaining: prev.players.filter(p => !p.isEliminated).length - 1,
       message: `${prev.players[prev.currentPlayerIndex].name === userName ? `${userName}, you knocked! Each player gets one final turn.` : `${prev.players[prev.currentPlayerIndex].name} knocked! Each player gets one final turn.`}`
     }));
     setTimeout(() => {
