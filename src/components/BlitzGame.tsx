@@ -266,7 +266,7 @@ const BlitzGame = () => {
         
         if (newTurnsRemaining <= 0) {
           console.log("Final round complete (all players got final turn), calculating scores...");
-          if (!isCalculatingResults) {
+          if (!roundCalculationInProgress) {
             calculateRoundResults();
           }
           return;
@@ -341,7 +341,7 @@ const BlitzGame = () => {
           });
         }
         console.log("Final round complete (all players got final turn), calculating scores...");
-        if (!isCalculatingResults) {
+        if (!roundCalculationInProgress) {
           calculateRoundResults();
         }
         return;
@@ -778,7 +778,7 @@ const BlitzGame = () => {
             });
           }
         console.log("Final round complete (all players got final turn), calculating scores...");
-        if (!isCalculatingResults) {
+        if (!roundCalculationInProgress) {
           calculateRoundResults();
         }
           return;
