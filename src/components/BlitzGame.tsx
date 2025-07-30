@@ -1017,13 +1017,26 @@ const BlitzGame = () => {
     const remainingPlayers = updatedPlayers.filter(p => !p.isEliminated);
     if (remainingPlayers.length === 1) {
       // Game over - only one player left
+      const winner = remainingPlayers[0];
+      console.log(`Game over! Winner: ${winner.name} (user: ${userName})`);
+      
       setGameState(prev => ({
         ...prev,
         players: updatedPlayers,
         gamePhase: 'gameEnd',
-        winner: remainingPlayers[0],
-        message: `${remainingPlayers[0].name} wins the game!`
+        winner: winner,
+        message: `${winner.name} wins the game!`
       }));
+      
+      // Show appropriate modal based on who won
+      if (winner.name === userName) {
+        console.log("User won - showing winner modal");
+        setShowWinnerModal(true);
+      } else {
+        console.log("AI won - showing game over modal");
+        setShowGameOverModal(true);
+      }
+      
       setRoundCalculationInProgress(false); // Reset flag
     } else {
       // Continue game - show hand reveal before starting new round
@@ -1170,11 +1183,11 @@ const BlitzGame = () => {
     );
   }
 
-  // Game end phase handled by GameOverModal only
+  // Game end phase - show appropriate modal
   if (gameState.gamePhase === 'gameEnd') {
     return (
       <>
-        {/* Show GameOverModal only when user is eliminated */}
+        {/* Show GameOverModal when user is eliminated or loses */}
         <GameOverModal
           isOpen={showGameOverModal}
           onClose={() => setShowGameOverModal(false)}
@@ -1182,6 +1195,17 @@ const BlitzGame = () => {
             setShowGameOverModal(false);
             setShowNameInput(true);
           }}
+        />
+        
+        {/* Show WinnerModal when user wins */}
+        <WinnerModal
+          isOpen={showWinnerModal}
+          onClose={() => setShowWinnerModal(false)}
+          onPlayAgain={() => {
+            setShowWinnerModal(false);
+            setShowNameInput(true);
+          }}
+          winnerName={gameState.winner?.name || ""}
         />
       </>
     );
