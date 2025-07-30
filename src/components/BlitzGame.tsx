@@ -912,12 +912,12 @@ const BlitzGame = () => {
     console.log("STARTING round calculation - blocking future calls");
     
     console.log("=== CALCULATING ROUND RESULTS ===");
-    console.log("Players before calculation:", gameState.players.map(p => `${p.name}: ${p.coins} coins`));
+    console.log("Players before calculation:", gameState.players.map(p => `${p.name} (ID:${p.id}): ${p.coins} coins`));
     
     const knocker = gameState.players[gameState.knocker!];
-    console.log(`Knocker: ${knocker.name} with score ${knocker.bestScore}`);
+    console.log(`Knocker: ${knocker.name} (ID:${knocker.id}) with score ${knocker.bestScore}`);
     const otherPlayers = gameState.players.filter((_, index) => index !== gameState.knocker);
-    console.log(`Other players: ${otherPlayers.map(p => `${p.name}(${p.bestScore})`).join(', ')}`);
+    console.log(`Other players: ${otherPlayers.map(p => `${p.name}(ID:${p.id},${p.bestScore})`).join(', ')}`);
     const knockerScore = knocker.bestScore;
     const otherScores = otherPlayers.map(p => p.bestScore);
     const lowestOtherScore = Math.min(...otherScores);
@@ -925,41 +925,61 @@ const BlitzGame = () => {
     
     // Create a COMPLETELY NEW player array to avoid any reference issues
     let updatedPlayers = gameState.players.map(player => ({ ...player }));
+    console.log("Deep copied players:", updatedPlayers.map(p => `${p.name} (ID:${p.id}): ${p.coins} coins`));
     let resultMessage = "";
     
-    // Find players by ID to avoid index confusion
+    // Find players by ID to avoid index confusion - CRITICAL SAFETY CHECK
     const knockerIndex = updatedPlayers.findIndex(p => p.id === knocker.id);
     const lowestScorer = otherPlayers.find(p => p.bestScore === lowestOtherScore)!;
     const lowestScorerIndex = updatedPlayers.findIndex(p => p.id === lowestScorer.id);
     
-    console.log(`Knocker index: ${knockerIndex}, Lowest scorer: ${lowestScorer.name} at index: ${lowestScorerIndex}`);
+    console.log(`CRITICAL CHECK - Knocker: ${knocker.name} (ID:${knocker.id}) at index: ${knockerIndex}`);
+    console.log(`CRITICAL CHECK - Lowest scorer: ${lowestScorer.name} (ID:${lowestScorer.id}) at index: ${lowestScorerIndex}`);
+    
+    // SAFETY VALIDATION
+    if (knockerIndex === -1 || lowestScorerIndex === -1) {
+      console.error("CRITICAL ERROR: Could not find player indices!");
+      console.error(`Knocker index: ${knockerIndex}, Lowest scorer index: ${lowestScorerIndex}`);
+      setRoundCalculationInProgress(false);
+      return;
+    }
+    
     if (knockerScore > lowestOtherScore) {
       // Knocker wins - SIMPLE direct coin transfer
       console.log(`Knocker ${knocker.name} wins! Transferring 1 coin from ${lowestScorer.name}`);
+      console.log(`BEFORE: Knocker ${updatedPlayers[knockerIndex].name} has ${updatedPlayers[knockerIndex].coins}, Loser ${updatedPlayers[lowestScorerIndex].name} has ${updatedPlayers[lowestScorerIndex].coins}`);
       
       // Make coin changes with direct assignment to prevent any reference issues
       updatedPlayers[knockerIndex].coins += 1;
       updatedPlayers[lowestScorerIndex].coins = Math.max(0, updatedPlayers[lowestScorerIndex].coins - 1);
       
-      console.log(`AFTER TRANSFER: ${knocker.name} has ${updatedPlayers[knockerIndex].coins} coins, ${lowestScorer.name} has ${updatedPlayers[lowestScorerIndex].coins} coins`);
+      console.log(`AFTER: Knocker ${updatedPlayers[knockerIndex].name} has ${updatedPlayers[knockerIndex].coins}, Loser ${updatedPlayers[lowestScorerIndex].name} has ${updatedPlayers[lowestScorerIndex].coins}`);
       
       resultMessage = `${knocker.name} won! ${lowestScorer.name} loses 1 coin (transferred to ${knocker.name}).`;
     } else {
       // Knocker loses - SIMPLE direct coin transfer  
       const highestScorer = otherPlayers.reduce((prev, curr) => (curr.bestScore > prev.bestScore ? curr : prev), otherPlayers[0]);
       const highestScorerIndex = updatedPlayers.findIndex(p => p.id === highestScorer.id);
-      console.log(`Knocker ${knocker.name} fails! Transferring 2 coins to ${highestScorer.name}`);
+      console.log(`Knocker ${knocker.name} fails! Transferring 2 coins to ${highestScorer.name} (ID:${highestScorer.id})`);
+      console.log(`BEFORE: Knocker ${updatedPlayers[knockerIndex].name} has ${updatedPlayers[knockerIndex].coins}, Winner ${updatedPlayers[highestScorerIndex].name} has ${updatedPlayers[highestScorerIndex].coins}`);
+      
+      // SAFETY VALIDATION
+      if (highestScorerIndex === -1) {
+        console.error("CRITICAL ERROR: Could not find highest scorer index!");
+        setRoundCalculationInProgress(false);
+        return;
+      }
       
       // Make coin changes with direct assignment
       updatedPlayers[knockerIndex].coins = Math.max(0, updatedPlayers[knockerIndex].coins - 2);
       updatedPlayers[highestScorerIndex].coins += 2;
       
-      console.log(`AFTER TRANSFER: ${knocker.name} has ${updatedPlayers[knockerIndex].coins} coins, ${highestScorer.name} has ${updatedPlayers[highestScorerIndex].coins} coins`);
+      console.log(`AFTER: Knocker ${updatedPlayers[knockerIndex].name} has ${updatedPlayers[knockerIndex].coins}, Winner ${updatedPlayers[highestScorerIndex].name} has ${updatedPlayers[highestScorerIndex].coins}`);
       
       resultMessage = `${knocker.name}'s knock failed! Loses 2 coins (transferred to ${highestScorer.name}).`;
     }
     
-    console.log("Players after coin changes:", updatedPlayers.map(p => `${p.name}: ${p.coins} coins`));
+    console.log("FINAL COIN SUMMARY:", updatedPlayers.map(p => `${p.name} (ID:${p.id}): ${p.coins} coins`));
     
     // FIXED: Only set isEliminated flag when coins reach exactly 0 - DON'T eliminate just for losing
     const playersWithEliminations = updatedPlayers.map(player => ({
