@@ -1048,7 +1048,7 @@ const BlitzGame = () => {
         setRoundCalculationInProgress(false); // Reset flag here too
       }, 1500);
     }
-  }, [roundCalculationInProgress, gameState.knocker, gameState.players, userName, showHandReveal]);
+  }, [roundCalculationInProgress, gameState.knocker, gameState.players, userName]);
 
   const handleHandRevealContinue = useCallback(() => {
     if (!showHandReveal) return; // Prevent multiple calls
