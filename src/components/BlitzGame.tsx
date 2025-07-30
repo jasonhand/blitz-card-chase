@@ -809,18 +809,9 @@ const BlitzGame = () => {
   const processPlayerElimination = (gameState: GameState): GameState => {
     const updatedPlayers = gameState.players.map(player => {
       if (player.coins === 0 && !player.isEliminated) {  // Only exactly 0 coins
-        // Show elimination modal for AI players
-        if (player.name !== userName) {
-          let playerImage = "/Bill_images/Bill_pixel.png"; // default
-          if (player.name === "Bill") playerImage = "/Bill_images/Bill_pixel.png";
-          else if (player.name === "Peggy") playerImage = "/Bill_images/Peggy.png";
-          else if (player.name === "Mom-Mom") playerImage = "/lovable-uploads/60a0284f-f13d-48bf-aa43-b3d1eed03a2b.png";
-          setEliminatedPlayer({ name: player.name, image: playerImage });
-          setShowEliminationModal(true);
-        } else {
-          // Don't show game over modal here - only in calculateRoundResults
-          // when coins reach exactly 0
-        }
+        console.log(`processPlayerElimination: ${player.name} (ID: ${player.id}) eliminated with 0 coins`);
+        // Note: We don't show elimination modal here anymore - only in calculateRoundResults
+        // to avoid duplicate modals
       }
       return {
         ...player,
@@ -981,12 +972,22 @@ const BlitzGame = () => {
       const originalPlayer = gameState.players.find(p => p.id === player.id);
       // Only show modal if player just got eliminated (was not eliminated before and now has 0 coins)
       if (player.coins === 0 && !originalPlayer?.isEliminated && player.name !== userName) {
+        console.log(`Player ${player.name} (ID: ${player.id}) eliminated - showing modal`);
         let playerImage = "/Bill_images/Bill_pixel.png"; // default
         if (player.name === "Bill") playerImage = "/Bill_images/Bill_pixel.png";
         else if (player.name === "Peggy") playerImage = "/Bill_images/Peggy.png";
         else if (player.name === "Mom-Mom") playerImage = "/lovable-uploads/60a0284f-f13d-48bf-aa43-b3d1eed03a2b.png";
-        setEliminatedPlayer({ name: player.name, image: playerImage });
-        setShowEliminationModal(true);
+        
+        // Clear any existing elimination modal first
+        setEliminatedPlayer(null);
+        setShowEliminationModal(false);
+        
+        // Set new elimination with delay to ensure clean state
+        setTimeout(() => {
+          setEliminatedPlayer({ name: player.name, image: playerImage });
+          setShowEliminationModal(true);
+          console.log(`Elimination modal set for ${player.name}`);
+        }, 100);
       }
     });
     
