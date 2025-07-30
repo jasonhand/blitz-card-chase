@@ -14,7 +14,7 @@ import PlayerEliminationModal from "./PlayerEliminationModal";
 import WinnerModal from "./WinnerModal";
 import GameOverModal from "./GameOverModal";
 import HandRevealModal from "./HandRevealModal";
-import { datadogRum } from '@datadog/browser-rum';
+
 
 const BlitzGame = () => {
   const { toast } = useToast();
@@ -59,14 +59,14 @@ const BlitzGame = () => {
       initializeGameWithName(savedName);
       
       // Track returning user
-      datadogRum.addAction('returning_user_login', {
+      window.DD_RUM && window.DD_RUM.addAction('returning_user_login', {
         userName: savedName,
         timestamp: Date.now()
       });
     } else {
       setShowNameInput(true);
       // Track new user
-      datadogRum.addAction('new_user_prompt', {
+      window.DD_RUM && window.DD_RUM.addAction('new_user_prompt', {
         timestamp: Date.now()
       });
     }
@@ -84,7 +84,7 @@ const BlitzGame = () => {
       initializeGameWithName(userName.trim());
       
       // Track user name submission
-      datadogRum.addAction('user_name_submitted', {
+      window.DD_RUM && window.DD_RUM.addAction('user_name_submitted', {
         userName: userName.trim(),
         timestamp: Date.now()
       });
@@ -94,7 +94,7 @@ const BlitzGame = () => {
   const handleNewGame = () => {
     setShowNameInput(true);
     // Track new game request
-    datadogRum.addAction('new_game_requested', {
+    window.DD_RUM && window.DD_RUM.addAction('new_game_requested', {
       userName: userName,
       timestamp: Date.now()
     });
@@ -161,7 +161,7 @@ const BlitzGame = () => {
     console.log(`${currentPlayer.name} knocked!`);
     
     // Track AI knock
-    datadogRum.addAction('ai_player_knock', {
+    window.DD_RUM && window.DD_RUM.addAction('ai_player_knock', {
       playerName: currentPlayer.name,
       playerScore: currentPlayer.bestScore,
       roundNumber: gameState.roundNumber,
@@ -395,7 +395,7 @@ const BlitzGame = () => {
       console.log("Initializing new game...");
       
       // Track game initialization
-      datadogRum.addAction('game_initialization_started', {
+      window.DD_RUM && window.DD_RUM.addAction('game_initialization_started', {
         userName: nameToUse,
         timestamp: Date.now()
       });
@@ -423,7 +423,7 @@ const BlitzGame = () => {
       await dealInitialCards(deckResponse.deck_id, players);
       
       // Track successful game initialization
-      datadogRum.addAction('game_initialization_completed', {
+      window.DD_RUM && window.DD_RUM.addAction('game_initialization_completed', {
         userName: nameToUse,
         deckId: deckResponse.deck_id,
         timestamp: Date.now()
@@ -433,7 +433,7 @@ const BlitzGame = () => {
       console.error("Error initializing game:", error);
       
       // Track initialization error
-      datadogRum.addError(error as Error, {
+      window.DD_RUM && window.DD_RUM.addError(error as Error, {
         context: 'game_initialization',
         userName: nameOverride || userName,
         timestamp: Date.now()
@@ -549,7 +549,7 @@ const BlitzGame = () => {
       console.log(`${player.name} got BLITZ (31)!`);
       
       // Track BLITZ achievement
-      datadogRum.addAction('player_achieved_blitz', {
+      window.DD_RUM && window.DD_RUM.addAction('player_achieved_blitz', {
         playerName: player.name,
         isUser: player.name === userName,
         roundNumber: gameState.roundNumber,
@@ -603,7 +603,7 @@ const BlitzGame = () => {
     const currentPlayer = gameState.players[gameState.currentPlayerIndex];
     
     // Track user knock
-    datadogRum.addAction('user_knock', {
+    window.DD_RUM && window.DD_RUM.addAction('user_knock', {
       playerScore: currentPlayer.bestScore,
       roundNumber: gameState.roundNumber,
       timestamp: Date.now()
@@ -835,7 +835,7 @@ const BlitzGame = () => {
       setSelectedCardIndex(null);
       
       // Track user discard
-      datadogRum.addAction('user_discard', {
+      window.DD_RUM && window.DD_RUM.addAction('user_discard', {
         selectedIndex: selectedCardIndex,
         roundNumber: gameState.roundNumber,
         timestamp: Date.now()
@@ -995,7 +995,7 @@ const BlitzGame = () => {
     const knocker = gameState.players[gameState.knocker!];
     
     // Track round results calculation
-    datadogRum.addAction('round_results_calculation', {
+    window.DD_RUM && window.DD_RUM.addAction('round_results_calculation', {
       knockerName: knocker.name,
       knockerScore: knocker.bestScore,
       roundNumber: gameState.roundNumber,
@@ -1109,7 +1109,7 @@ const BlitzGame = () => {
       console.log(`User ${userName} eliminated with 0 coins - showing game over modal`);
       
       // Track user elimination/game over
-      datadogRum.addAction('user_game_over', {
+      window.DD_RUM && window.DD_RUM.addAction('user_game_over', {
         finalCoins: userPlayer.coins,
         roundNumber: gameState.roundNumber,
         timestamp: Date.now()

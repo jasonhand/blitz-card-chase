@@ -1,10 +1,8 @@
 
 import BlitzGame from "@/components/BlitzGame";
-import { datadogRum } from '@datadog/browser-rum';
-
 const Index = () => {
   // Track page view for RUM
-  datadogRum.addAction('page_view', {
+  window.DD_RUM && window.DD_RUM.addAction('page_view', {
     page: 'game',
     message: 'User entered the Blitz Card Chase game'
   });

@@ -1,6 +1,3 @@
-/// <reference types="vite/client" />
-
-// Extend Window interface for Datadog RUM
 declare global {
   interface Window {
     DD_RUM?: {
@@ -10,3 +7,5 @@ declare global {
     };
   }
 }
+
+export {};
