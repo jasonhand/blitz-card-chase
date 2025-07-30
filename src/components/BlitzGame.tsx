@@ -990,6 +990,10 @@ const BlitzGame = () => {
     
     console.log("=== CALCULATING ROUND RESULTS ===");
     
+    console.log("Players before calculation:", gameState.players.map(p => `${p.name} (ID:${p.id}): ${p.coins} coins`));
+    
+    const knocker = gameState.players[gameState.knocker!];
+    
     // Track round results calculation
     datadogRum.addAction('round_results_calculation', {
       knockerName: knocker.name,
@@ -997,10 +1001,6 @@ const BlitzGame = () => {
       roundNumber: gameState.roundNumber,
       timestamp: Date.now()
     });
-    
-    console.log("Players before calculation:", gameState.players.map(p => `${p.name} (ID:${p.id}): ${p.coins} coins`));
-    
-    const knocker = gameState.players[gameState.knocker!];
     console.log(`Knocker: ${knocker.name} (ID:${knocker.id}) with score ${knocker.bestScore}`);
     const otherPlayers = gameState.players.filter((_, index) => index !== gameState.knocker);
     console.log(`Other players: ${otherPlayers.map(p => `${p.name}(ID:${p.id},${p.bestScore})`).join(', ')}`);
