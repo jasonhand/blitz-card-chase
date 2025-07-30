@@ -970,15 +970,17 @@ const BlitzGame = () => {
     
     console.log("Players after coin changes:", updatedPlayers.map(p => `${p.name}: ${p.coins} coins`));
     
-    // Check for eliminations - but be more careful about when to actually eliminate
+    // FIXED: Only set isEliminated flag when coins reach exactly 0 - DON'T eliminate just for losing
     const playersWithEliminations = updatedPlayers.map(player => ({
       ...player,
       isEliminated: player.coins === 0  // Only eliminate at exactly 0 coins
     }));
     
-    // Only mark AI players as eliminated if they have 0 coins and show elimination modal
+    // Show elimination modal for AI players who just got eliminated (went from >0 to 0 coins)
     playersWithEliminations.forEach(player => {
-      if (player.coins === 0 && !gameState.players.find(p => p.id === player.id)?.isEliminated && player.name !== userName) {
+      const originalPlayer = gameState.players.find(p => p.id === player.id);
+      // Only show modal if player just got eliminated (was not eliminated before and now has 0 coins)
+      if (player.coins === 0 && !originalPlayer?.isEliminated && player.name !== userName) {
         let playerImage = "/Bill_images/Bill_pixel.png"; // default
         if (player.name === "Bill") playerImage = "/Bill_images/Bill_pixel.png";
         else if (player.name === "Peggy") playerImage = "/Bill_images/Peggy.png";
@@ -995,9 +997,8 @@ const BlitzGame = () => {
     const userPlayer = updatedPlayers.find(p => p.name === userName);
     console.log(`User ${userName} coins after round: ${userPlayer?.coins}`);
     console.log(`User isEliminated status: ${userPlayer?.isEliminated}`);
-    console.log(`About to check if user should be eliminated...`);
     
-    if (userPlayer && userPlayer.coins === 0) {
+    if (userPlayer && userPlayer.coins === 0 && !gameState.players.find(p => p.name === userName)?.isEliminated) {
       console.log(`User ${userName} eliminated with 0 coins - showing game over modal`);
       setGameState(prev => ({
         ...prev,
@@ -1014,7 +1015,7 @@ const BlitzGame = () => {
     
     const remainingPlayers = updatedPlayers.filter(p => !p.isEliminated);
     if (remainingPlayers.length === 1) {
-      // Game over
+      // Game over - only one player left
       setGameState(prev => ({
         ...prev,
         players: updatedPlayers,
@@ -1024,7 +1025,7 @@ const BlitzGame = () => {
       }));
       setRoundCalculationInProgress(false); // Reset flag
     } else {
-      // Show hand reveal before starting new round
+      // Continue game - show hand reveal before starting new round
       setGameState(prev => ({
         ...prev,
         players: updatedPlayers
@@ -1047,7 +1048,7 @@ const BlitzGame = () => {
         setRoundCalculationInProgress(false); // Reset flag here too
       }, 1500);
     }
-  }, [roundCalculationInProgress, gameState.knocker, gameState.players, userName]);
+  }, [roundCalculationInProgress, gameState.knocker, gameState.players, userName, showHandReveal]);
 
   const handleHandRevealContinue = useCallback(() => {
     if (!showHandReveal) return; // Prevent multiple calls
