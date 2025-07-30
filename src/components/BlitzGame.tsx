@@ -14,6 +14,7 @@ import PlayerEliminationModal from "./PlayerEliminationModal";
 import WinnerModal from "./WinnerModal";
 import GameOverModal from "./GameOverModal";
 import HandRevealModal from "./HandRevealModal";
+import { datadogRum } from '@datadog/browser-rum';
 
 const BlitzGame = () => {
   const { toast } = useToast();
@@ -56,8 +57,18 @@ const BlitzGame = () => {
       setUserName(savedName);
       setShowNameInput(false);
       initializeGameWithName(savedName);
+      
+      // Track returning user
+      datadogRum.addAction('returning_user_login', {
+        userName: savedName,
+        timestamp: Date.now()
+      });
     } else {
       setShowNameInput(true);
+      // Track new user
+      datadogRum.addAction('new_user_prompt', {
+        timestamp: Date.now()
+      });
     }
   }, []);
 
@@ -71,11 +82,22 @@ const BlitzGame = () => {
       localStorage.setItem("blitzUserName", userName.trim());
       setShowNameInput(false);
       initializeGameWithName(userName.trim());
+      
+      // Track user name submission
+      datadogRum.addAction('user_name_submitted', {
+        userName: userName.trim(),
+        timestamp: Date.now()
+      });
     }
   };
 
   const handleNewGame = () => {
     setShowNameInput(true);
+    // Track new game request
+    datadogRum.addAction('new_game_requested', {
+      userName: userName,
+      timestamp: Date.now()
+    });
   };
 
   // Remove automatic initialization - now handled by name input
@@ -137,6 +159,15 @@ const BlitzGame = () => {
   const handleAIKnock = () => {
     const currentPlayer = gameState.players[gameState.currentPlayerIndex];
     console.log(`${currentPlayer.name} knocked!`);
+    
+    // Track AI knock
+    datadogRum.addAction('ai_player_knock', {
+      playerName: currentPlayer.name,
+      playerScore: currentPlayer.bestScore,
+      roundNumber: gameState.roundNumber,
+      timestamp: Date.now()
+    });
+    
     toast({
       title: "Knock!",
       description: `${currentPlayer.name} has knocked. Everyone else gets one more draw to improve their hand.`
@@ -363,6 +394,12 @@ const BlitzGame = () => {
       const nameToUse = nameOverride || userName;
       console.log("Initializing new game...");
       
+      // Track game initialization
+      datadogRum.addAction('game_initialization_started', {
+        userName: nameToUse,
+        timestamp: Date.now()
+      });
+
       // Create players
       const players = [
         createInitialPlayer(0, nameToUse),
@@ -385,8 +422,23 @@ const BlitzGame = () => {
       // Deal initial cards
       await dealInitialCards(deckResponse.deck_id, players);
       
+      // Track successful game initialization
+      datadogRum.addAction('game_initialization_completed', {
+        userName: nameToUse,
+        deckId: deckResponse.deck_id,
+        timestamp: Date.now()
+      });
+
     } catch (error) {
       console.error("Error initializing game:", error);
+      
+      // Track initialization error
+      datadogRum.addError(error as Error, {
+        context: 'game_initialization',
+        userName: nameOverride || userName,
+        timestamp: Date.now()
+      });
+      
       toast({
         title: "Error",
         description: "Failed to initialize game. Please try again.",
@@ -495,6 +547,15 @@ const BlitzGame = () => {
   const checkForBlitz = (player: Player) => {
     if (hasBlitz(player)) {
       console.log(`${player.name} got BLITZ (31)!`);
+      
+      // Track BLITZ achievement
+      datadogRum.addAction('player_achieved_blitz', {
+        playerName: player.name,
+        isUser: player.name === userName,
+        roundNumber: gameState.roundNumber,
+        timestamp: Date.now()
+      });
+      
       // All other players lose 1 coin, winner (player) gains 1 coin per loser
       let updatedPlayers = gameState.players.map(p =>
         p.id === player.id ? p : { ...p, coins: Math.max(0, p.coins - 1) }
@@ -538,6 +599,15 @@ const BlitzGame = () => {
 
   const handleKnock = () => {
     console.log(`Player ${gameState.currentPlayerIndex} knocked!`);
+    
+    const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+    
+    // Track user knock
+    datadogRum.addAction('user_knock', {
+      playerScore: currentPlayer.bestScore,
+      roundNumber: gameState.roundNumber,
+      timestamp: Date.now()
+    });
     
     toast({
       title: "Knock!",
@@ -764,6 +834,13 @@ const BlitzGame = () => {
       setPendingDrawCard(null);
       setSelectedCardIndex(null);
       
+      // Track user discard
+      datadogRum.addAction('user_discard', {
+        selectedIndex: selectedCardIndex,
+        roundNumber: gameState.roundNumber,
+        timestamp: Date.now()
+      });
+      
       // Check if final round is complete after user turn
       if (gameState.gamePhase === 'finalRound') {
         const activePlayers = gameState.players.filter(p => !p.isEliminated);
@@ -912,6 +989,15 @@ const BlitzGame = () => {
     console.log("STARTING round calculation - blocking future calls");
     
     console.log("=== CALCULATING ROUND RESULTS ===");
+    
+    // Track round results calculation
+    datadogRum.addAction('round_results_calculation', {
+      knockerName: knocker.name,
+      knockerScore: knocker.bestScore,
+      roundNumber: gameState.roundNumber,
+      timestamp: Date.now()
+    });
+    
     console.log("Players before calculation:", gameState.players.map(p => `${p.name} (ID:${p.id}): ${p.coins} coins`));
     
     const knocker = gameState.players[gameState.knocker!];
@@ -1021,6 +1107,14 @@ const BlitzGame = () => {
     
     if (userPlayer && userPlayer.coins === 0 && !gameState.players.find(p => p.name === userName)?.isEliminated) {
       console.log(`User ${userName} eliminated with 0 coins - showing game over modal`);
+      
+      // Track user elimination/game over
+      datadogRum.addAction('user_game_over', {
+        finalCoins: userPlayer.coins,
+        roundNumber: gameState.roundNumber,
+        timestamp: Date.now()
+      });
+      
       setGameState(prev => ({
         ...prev,
         players: updatedPlayers,
