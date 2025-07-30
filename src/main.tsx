@@ -6,20 +6,31 @@ import { reactPlugin } from '@datadog/browser-rum-react';
 
 console.log('Initializing Datadog RUM...');
 
-datadogRum.init({
+try {
+  datadogRum.init({
     applicationId: '3f303b3a-fe48-4df4-89cc-04a5fe2bf3be',
     clientToken: 'pub40fedb2ee10a024a531bc40755bd4d0e',
     site: 'datadoghq.com',
-    service:'blitz',
+    service: 'blitz-card-game',
     env: 'prod',
-    
-    // Specify a version number to identify the deployed version of your application in Datadog
-    // version: '1.0.0',
-    sessionSampleRate:  100,
+    version: '1.0.0',
+    sessionSampleRate: 100,
     sessionReplaySampleRate: 100,
     defaultPrivacyLevel: 'mask-user-input',
+    trackUserInteractions: true,
+    trackResources: true,
+    trackLongTasks: true,
     plugins: [reactPlugin({ router: true })],
-});
+  });
+  
+  console.log('✓ Datadog RUM initialized successfully');
+  
+  // Start the RUM session explicitly
+  datadogRum.startSessionReplayRecording();
+  
+} catch (error) {
+  console.error('✗ Failed to initialize Datadog RUM:', error);
+}
 
 console.log('Datadog RUM initialized:', datadogRum);
 
