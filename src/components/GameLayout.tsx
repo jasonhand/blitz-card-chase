@@ -53,10 +53,16 @@ const GameLayout = ({
   onChangeName,
   pendingDrawCard,
 }: GameLayoutProps) => {
+  // Add state for random video and discard log visibility  
+  const videoOptions = ["/Bill_images/Bill_01.mp4", "/Bill_images/Bill_02.mp4", "/Bill_images/Peggy.mp4"];
+  const [rulesOpen, setRulesOpen] = React.useState(false);
+  const [videoSrc, setVideoSrc] = React.useState(videoOptions[0]);
+  const [showDiscardLog, setShowDiscardLog] = React.useState(false);
+
   const otherPlayers = players.filter(p => p.id !== 0);
   const isUserTurn = currentPlayerIndex === 0;
   const isKnocker = gamePhase === 'finalRound' && currentPlayerIndex === userPlayer.id && knocker === userPlayer.id;
-  const canSelectCards = turnPhase === 'discard' && isUserTurn && !(gamePhase === 'finalRound' && currentPlayerIndex === userPlayer.id && knocker === userPlayer.id);
+  const canSelectCards = turnPhase === 'discard' && isUserTurn && !(gamePhase === 'finalRound' && currentPlayerIndex === userPlayer.id && knocker === userPlayer.id) && !rulesOpen;
 
   const handleDiscardCard = (cardIndex: number) => {
     if (turnPhase === 'discard' && isUserTurn) {
@@ -72,12 +78,6 @@ const GameLayout = ({
     clubs: '♣️',
     spades: '♠️',
   };
-
-  // Add state for random video and discard log visibility
-  const videoOptions = ["/Bill_images/Bill_01.mp4", "/Bill_images/Bill_02.mp4", "/Bill_images/Peggy.mp4"];
-  const [rulesOpen, setRulesOpen] = React.useState(false);
-  const [videoSrc, setVideoSrc] = React.useState(videoOptions[0]);
-  const [showDiscardLog, setShowDiscardLog] = React.useState(false);
   
   React.useEffect(() => {
     if (rulesOpen) {
