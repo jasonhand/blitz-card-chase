@@ -54,7 +54,7 @@ const GameLayout = ({
   pendingDrawCard,
 }: GameLayoutProps) => {
   // Add state for random video and discard log visibility  
-  const videoOptions = ["/Bill_images/Bill_01.mp4", "/Bill_images/Bill_02.mp4", "/Bill_images/Peggy.mp4"];
+  const videoOptions = ["/Bill_images/Bill_01.mp4", "/Bill_images/Bill_02.mp4", "/Bill_images/Peggy.mp4", "/Bill_images/Mom-Mom.mp4"];
   const [rulesOpen, setRulesOpen] = React.useState(false);
   const [videoSrc, setVideoSrc] = React.useState(videoOptions[0]);
   const [showDiscardLog, setShowDiscardLog] = React.useState(false);

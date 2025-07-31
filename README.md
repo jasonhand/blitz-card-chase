@@ -7,7 +7,7 @@
 
 ## 🎮 Live Demo
 
-**🎯 [Play Blitz with Bill & Peggy Now!](https://blitz-card-chase.lovable.app/)**
+**🎯 [Play Blitz with Bill & Peggy Now!](https://Blitz with Bill.lovable.app/)**
 
 ## 🎮 What is Blitz with Bill & Peggy?
 
@@ -105,7 +105,7 @@ On your turn, you have two main decisions:
 1. **Clone the repository**
    ```bash
    git clone <your-repo-url>
-   cd blitz-card-chase
+   cd Blitz with Bill
    ```
 
 2. **Install dependencies**
@@ -202,4 +202,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-**Ready to play?** [Start the game now](https://blitz-card-chase.lovable.app/) and challenge Bill and his AI friends to a round of Blitz! 🃏✨
+**Ready to play?** [Start the game now](https://Blitz with Bill.lovable.app/) and challenge Bill and his AI friends to a round of Blitz! 🃏✨
